@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# The Academy of Natural Wellness (ANW Academy)
 
-## Getting Started
+> "Where ancient wisdom meets modern mastery."
 
-First, run the development server:
+A full-stack Next.js university platform for natural wellness education — covering Herbal Medicine, Traditional Chinese Medicine, Homeopathic Studies, Functional Wellness, Practice Building, and Wellness Entrepreneurship.
+
+## Tech Stack
+
+- **Next.js 16** App Router with TypeScript strict mode
+- **Tailwind CSS** with custom ANW design tokens
+- **Prisma ORM v7** with PostgreSQL (Supabase)
+- **Supabase Auth** for authentication and session management
+- **Anthropic SDK** (`@anthropic-ai/sdk`) for the ANW Scholar AI tutor
+- **Lucide React** for icons
+
+## Features
+
+- 6 Schools — Herbal Medicine, TCM, Homeopathic Studies, Functional Wellness, Practice Building, Wellness Entrepreneurship
+- 48 Courses — 8 per school, with modules, lessons, quizzes, assignments, and discussions
+- 8 Certifications — From Foundations to Senior Natural Wellness Practitioner
+- Wellness Units (WU) — Progress currency earned through all learning activities
+- ANW Scholar — AI learning companion powered by Claude
+- Practitioner Network — Public directory of verified ANW graduates
+- Admin Dashboard — Applications, students, schools, analytics
+- Practitioner Portal — Client management, continuing education, directory profile
+
+## Setup
+
+### Prerequisites
+
+- Node.js 18+
+- Supabase account with a Postgres database
+- Anthropic API key
+
+### 1. Clone and Install
+
+```bash
+git clone <repo-url>
+cd anw-academy
+npm install
+```
+
+### 2. Configure Environment
+
+Fill in `.env.local` with your credentials:
+
+```
+DATABASE_URL=postgresql://...
+DIRECT_URL=postgresql://...
+NEXT_PUBLIC_SUPABASE_URL=https://...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+ANTHROPIC_API_KEY=sk-ant-...
+NEXTAUTH_SECRET=...
+```
+
+### 3. Set Up Database
+
+```bash
+npx prisma db push
+npx prisma db seed
+```
+
+### 4. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+anw-academy/
+├── app/
+│   ├── (public)/          # Public marketing pages
+│   ├── (auth)/            # Login / Register
+│   ├── (student)/         # Student dashboard
+│   ├── (practitioner)/    # Practitioner portal
+│   ├── (admin)/           # Admin control panel
+│   └── api/               # API routes (AI tutor, auth callback)
+├── components/
+│   ├── shared/            # Reusable UI components
+│   ├── dashboard/         # Student dashboard components
+│   ├── admin/             # Admin components
+│   └── practitioner/      # Practitioner components
+├── lib/
+│   ├── prisma.ts          # Prisma client
+│   ├── utils.ts           # Utility functions
+│   └── supabase/          # Supabase clients
+├── prisma/
+│   ├── schema.prisma      # Database schema
+│   └── seed.ts            # Seed data
+└── prisma.config.ts       # Prisma v7 configuration
+```
 
-## Learn More
+## Seeded Accounts
 
-To learn more about Next.js, take a look at the following resources:
+| Role | Email |
+|------|-------|
+| Admin | admin@anwacademy.com |
+| Student | emma.clarke@student.com |
+| Practitioner | evelyn.hartwood@practitioner.com |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Wellness Unit System
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Activity | WU Earned |
+|----------|-----------|
+| Lesson completed | 1 WU |
+| Quiz passed | 2 WU |
+| Discussion post | 2 WU |
+| Assignment submitted | 5 WU |
+| Case study approved | 10-25 WU |
+| Capstone project | 50 WU |
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+vercel --prod
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Set all environment variables in your Vercel project settings.
+
+## Educational Disclaimer
+
+The Academy of Natural Wellness provides educational content for informational purposes only. Programs do not confer licensed medical qualifications. Graduates are wellness educators, not licensed healthcare practitioners.

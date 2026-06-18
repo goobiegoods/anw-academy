@@ -1,0 +1,388 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  STUDENT
+  MENTOR
+  PRACTITIONER
+}
+
+enum AppStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  WAITLISTED
+  REJECTED
+}
+
+model User {
+  id                 String                   @id @default(uuid())
+  email              String                   @unique
+  name               String
+  role               Role                     @default(STUDENT)
+  createdAt          DateTime                 @default(now())
+  studentProfile     StudentProfile?
+  practitionerProfile PractitionerProfile?
+  enrollments        Enrollment[]
+  quizAttempts       QuizAttempt[]
+  submissions        AssignmentSubmission[]
+  discussionPosts    DiscussionPost[]
+  caseStudies        CaseStudy[]
+  wuTransactions     WellnessUnitTransaction[]
+  capstones          Capstone[]
+  certifications     StudentCertification[]
+  lessonProgress     LessonProgress[]
+}
+
+model StudentProfile {
+  id                    String   @id @default(uuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id])
+  level                 Int      @default(1)
+  totalWU               Int      @default(0)
+  activeCertificationId String?
+  status                String   @default("active")
+  bio                   String?
+  location              String?
+}
+
+model Application {
+  id              String    @id @default(uuid())
+  name            String
+  email           String
+  phone           String?
+  location        String?
+  motivation      String
+  experienceLevel String
+  schoolInterest  String
+  pathway         String
+  status          AppStatus @default(SUBMITTED)
+  submittedAt     DateTime  @default(now())
+  reviewedAt      DateTime?
+}
+
+model School {
+  id          String       @id @default(uuid())
+  name        String
+  slug        String       @unique
+  description String
+  color       String
+  accent      String
+  icon        String
+  order       Int
+  departments Department[]
+  courses     Course[]
+  quizzes     Quiz[]
+}
+
+model Department {
+  id          String   @id @default(uuid())
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id])
+  name        String
+  description String?
+  courses     Course[]
+}
+
+model Course {
+  id             String               @id @default(uuid())
+  schoolId       String
+  school         School               @relation(fields: [schoolId], references: [id])
+  departmentId   String?
+  department     Department?          @relation(fields: [departmentId], references: [id])
+  title          String
+  slug           String               @unique
+  description    String
+  level          Int                  @default(1)
+  estimatedHours Int
+  wuValue        Int
+  status         String               @default("published")
+  order          Int
+  modules        Module[]
+  enrollments    Enrollment[]
+  quizzes        Quiz[]
+  assignments    Assignment[]
+  discussions    Discussion[]
+  caseStudies    CaseStudy[]
+}
+
+model Module {
+  id          String   @id @default(uuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id])
+  title       String
+  description String?
+  order       Int
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id                 String           @id @default(uuid())
+  moduleId           String
+  module             Module           @relation(fields: [moduleId], references: [id])
+  title              String
+  content            String
+  videoUrl           String?
+  objectives         String[]
+  keyTerms           String[]
+  reflectionQuestion String?
+  order              Int
+  wuValue            Int              @default(1)
+  lessonProgress     LessonProgress[]
+}
+
+model LessonProgress {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  lessonId    String
+  lesson      Lesson    @relation(fields: [lessonId], references: [id])
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  @@unique([userId, lessonId])
+}
+
+model Enrollment {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  courseId        String
+  course          Course    @relation(fields: [courseId], references: [id])
+  status          String    @default("active")
+  progressPercent Int       @default(0)
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+
+  @@unique([userId, courseId])
+}
+
+model Quiz {
+  id               String        @id @default(uuid())
+  courseId         String?
+  course           Course?       @relation(fields: [courseId], references: [id])
+  schoolId         String?
+  school           School?       @relation(fields: [schoolId], references: [id])
+  lessonId         String?       @unique
+  title            String
+  type             String        @default("lesson") // lesson | midterm | final
+  passingScore     Int           @default(70)
+  wuValue          Int           @default(2)
+  timeLimitMinutes Int?
+  questionCount    Int           @default(3)
+  cooldownHours    Int           @default(24)
+  questions        Question[]
+  attempts         QuizAttempt[]
+}
+
+model Question {
+  id            String   @id @default(uuid())
+  quizId        String
+  quiz          Quiz     @relation(fields: [quizId], references: [id])
+  type          String
+  prompt        String
+  options       String[]
+  correctAnswer String
+  explanation   String?
+}
+
+model QuizAttempt {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  quizId      String
+  quiz        Quiz      @relation(fields: [quizId], references: [id])
+  score       Int       @default(0)
+  passed      Boolean   @default(false)
+  answers     Json
+  questionIds String[]  @default([])
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+  attemptedAt DateTime  @default(now())
+}
+
+model Assignment {
+  id          String               @id @default(uuid())
+  courseId    String
+  course      Course               @relation(fields: [courseId], references: [id])
+  title       String
+  prompt      String
+  wuValue     Int                  @default(5)
+  submissions AssignmentSubmission[]
+}
+
+model AssignmentSubmission {
+  id           String     @id @default(uuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  content      String
+  status       String     @default("submitted")
+  feedback     String?
+  submittedAt  DateTime   @default(now())
+  reviewedAt   DateTime?
+}
+
+model Discussion {
+  id              String           @id @default(uuid())
+  courseId        String
+  course          Course           @relation(fields: [courseId], references: [id])
+  moduleId        String?
+  title           String
+  prompt          String
+  requiredReplies Int              @default(1)
+  wuOriginalPost  Int              @default(2)
+  wuReply         Int              @default(1)
+  posts           DiscussionPost[]
+}
+
+model DiscussionPost {
+  id           String     @id @default(uuid())
+  discussionId String
+  discussion   Discussion @relation(fields: [discussionId], references: [id])
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  parentPostId String?
+  content      String
+  createdAt    DateTime   @default(now())
+}
+
+model CaseStudy {
+  id                   String    @id @default(uuid())
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id])
+  courseId             String?
+  course               Course?   @relation(fields: [courseId], references: [id])
+  title                String
+  scenario             String
+  observations         String
+  wellnessSupport      String
+  safetyConsiderations String
+  reflection           String
+  status               String    @default("submitted")
+  mentorId             String?
+  feedback             String?
+  wuAwarded            Int?
+  submittedAt          DateTime  @default(now())
+  reviewedAt           DateTime?
+}
+
+model Certification {
+  id                  String               @id @default(uuid())
+  title               String
+  description         String
+  requiredWU          Int
+  requiredCourses     String[]
+  requiredCaseStudies Int                  @default(0)
+  requiredCapstone    Boolean              @default(false)
+  level               Int
+  duration            String
+  studentCerts        StudentCertification[]
+}
+
+model StudentCertification {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  certificationId String
+  certification   Certification @relation(fields: [certificationId], references: [id])
+  status          String        @default("in_progress")
+  progressPercent Int           @default(0)
+  awardedAt       DateTime?
+}
+
+model Capstone {
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  title          String
+  type           String
+  description    String
+  submission     String?
+  status         String    @default("draft")
+  mentorFeedback String?
+  wuAwarded      Int?
+  submittedAt    DateTime?
+  approvedAt     DateTime?
+}
+
+model WellnessUnitTransaction {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  sourceType  String
+  sourceId    String?
+  amount      Int
+  description String
+  createdAt   DateTime @default(now())
+}
+
+model PractitionerProfile {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id])
+  displayName      String
+  bio              String?
+  location         String?
+  virtualAvailable Boolean  @default(true)
+  inPersonAvailable Boolean @default(false)
+  specialties      String[]
+  languages        String[]
+  certifications   String[]
+  directoryStatus  String   @default("pending")
+  verifiedGraduate Boolean  @default(false)
+  bookingUrl       String?
+  clients          Client[]
+}
+
+model Client {
+  id             String              @id @default(uuid())
+  practitionerId String
+  practitioner   PractitionerProfile @relation(fields: [practitionerId], references: [id])
+  name           String
+  email          String?
+  goals          String?
+  notes          String?
+  createdAt      DateTime            @default(now())
+  sessions       ClientSession[]
+}
+
+model ClientSession {
+  id             String    @id @default(uuid())
+  clientId       String
+  client         Client    @relation(fields: [clientId], references: [id])
+  practitionerId String
+  sessionDate    DateTime
+  notes          String?
+  resourcesShared String[]
+  followUpDate   DateTime?
+}
+
+model Resource {
+  id       String   @id @default(uuid())
+  title    String
+  type     String
+  schoolId String?
+  content  String?
+  fileUrl  String?
+  tags     String[]
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String
+  body      String
+  audience  String   @default("all")
+  createdAt DateTime @default(now())
+}
