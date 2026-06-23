@@ -2,13 +2,10 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import LessonViewer from "@/components/lesson/LessonViewer";
 
 type LessonSummary = {
   id: string;
   title: string;
-  content: string;
   order: number;
   wuValue: number;
 };
@@ -16,6 +13,7 @@ type LessonSummary = {
 type CourseContentProps = {
   course: {
     id: string;
+    slug: string;
     title: string;
     description: string;
     level: number;
@@ -34,17 +32,10 @@ type CourseContentProps = {
   completedLessonIds: string[];
 };
 
-export default function CourseContent({
-  course,
-  completedLessonIds,
-}: CourseContentProps) {
-  const router = useRouter();
-  const [openLesson, setOpenLesson] = useState<LessonSummary | null>(null);
-  const [completed, setCompleted] = useState(new Set(completedLessonIds));
-
+export default function CourseContent({ course, completedLessonIds }: CourseContentProps) {
+  const [completed] = useState(new Set(completedLessonIds));
   const color = course.school.color;
 
-  // Flat ordered lesson list — a lesson unlocks when every earlier lesson is complete
   const orderedLessons = useMemo(
     () => course.modules.flatMap((m) => m.lessons),
     [course.modules]
@@ -65,9 +56,7 @@ export default function CourseContent({
       {/* Course header */}
       <div
         className="rounded-2xl px-8 py-10 text-white"
-        style={{
-          background: `linear-gradient(130deg, ${color} 0%, ${color}cc 100%)`,
-        }}
+        style={{ background: `linear-gradient(130deg, ${color} 0%, ${color}cc 100%)` }}
       >
         <p className="text-[10px] uppercase tracking-[0.25em] font-bold text-white/60 mb-2">
           {course.school.name} · Level {course.level}
@@ -99,83 +88,83 @@ export default function CourseContent({
           </div>
         </div>
         <div className="mt-5 h-1.5 rounded-full bg-white/20 overflow-hidden max-w-md">
-          <div
-            className="h-full bg-[#e8b45a] rounded-full transition-all"
-            style={{ width: `${pct}%` }}
-          />
+          <div className="h-full bg-[#e8b45a] rounded-full transition-all" style={{ width: `${pct}%` }} />
         </div>
       </div>
 
       {/* Modules */}
       {course.modules.map((module, mi) => {
-        const moduleDiscussion = course.discussions.find(
-          (d) => d.moduleId === module.id
-        );
+        const moduleDiscussion = course.discussions.find((d) => d.moduleId === module.id);
         return (
-          <div
-            key={module.id}
-            className="bg-white border border-[#e2ddd5] rounded-2xl overflow-hidden"
-          >
+          <div key={module.id} className="bg-white border border-[#e2ddd5] rounded-2xl overflow-hidden">
             <div className="px-7 py-5 border-b border-[#f0ece4] bg-[#faf8f4]">
               <p className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#c9923a] mb-1">
                 Module {mi + 1}
               </p>
-              <h2 className="font-playfair text-lg font-bold text-[#1a1a1a]">
-                {module.title}
-              </h2>
+              <h2 className="font-playfair text-lg font-bold text-[#1a1a1a]">{module.title}</h2>
             </div>
             <ul>
               {module.lessons.map((lesson, li) => {
                 const done = completed.has(lesson.id);
                 const unlocked = isUnlocked(lesson.id);
-                return (
-                  <li
-                    key={lesson.id}
-                    className="border-b border-[#f0ece4] last:border-b-0"
-                  >
-                    <button
-                      disabled={!unlocked}
-                      onClick={() => setOpenLesson(lesson)}
-                      className="w-full flex items-center gap-4 px-7 py-4 min-h-[56px] text-left hover:bg-[#faf8f4] transition-colors disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                const isCurrent =
+                  !done &&
+                  unlocked &&
+                  orderedLessons.find((l) => !completed.has(l.id))?.id === lesson.id;
+
+                const inner = (
+                  <>
+                    <span
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[12px] font-bold"
+                      style={{
+                        backgroundColor: done ? color : unlocked ? `${color}18` : "#f0ece4",
+                        color: done ? "#fff" : unlocked ? color : "#b3aca0",
+                      }}
                     >
+                      {done ? "✓" : li + 1}
+                    </span>
+                    <span className="flex-1 min-w-0">
                       <span
-                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[12px] font-bold"
-                        style={{
-                          backgroundColor: done ? color : unlocked ? `${color}18` : "#f0ece4",
-                          color: done ? "#fff" : unlocked ? color : "#b3aca0",
-                        }}
+                        className={`block text-[14px] font-medium leading-snug ${
+                          unlocked ? "text-[#1a1a1a]" : "text-[#b3aca0]"
+                        }`}
                       >
-                        {done ? "✓" : li + 1}
+                        {lesson.title}
                       </span>
-                      <span className="flex-1 min-w-0">
-                        <span
-                          className={`block text-[14px] font-medium leading-snug ${
-                            unlocked ? "text-[#1a1a1a]" : "text-[#b3aca0]"
-                          }`}
-                        >
-                          {lesson.title}
-                        </span>
-                        <span className="block text-[11px] text-[#9a9088] mt-0.5">
-                          {done
-                            ? "Completed — review anytime"
-                            : unlocked
-                              ? `10 cards · ${lesson.wuValue} WU on completion`
-                              : "Locked — complete the previous lesson"}
-                        </span>
+                      <span className="block text-[11px] text-[#9a9088] mt-0.5">
+                        {done
+                          ? "Completed — review anytime"
+                          : unlocked
+                          ? `10 cards · ${lesson.wuValue} WU on completion`
+                          : "Locked — complete the previous lesson"}
                       </span>
-                      {!unlocked && <span className="text-[#b3aca0] text-sm">🔒</span>}
-                      {unlocked && !done && (
-                        <span
-                          className="text-[11px] font-bold uppercase tracking-[0.1em] whitespace-nowrap"
-                          style={{ color }}
-                        >
-                          {orderedLessons.find((l) => !completed.has(l.id))?.id ===
-                          lesson.id
-                            ? "Continue →"
-                            : "Open →"}
-                        </span>
-                      )}
-                    </button>
+                    </span>
+                    {!unlocked && <span className="text-[#b3aca0] text-sm">🔒</span>}
+                    {unlocked && !done && (
+                      <span
+                        className="text-[11px] font-bold uppercase tracking-[0.1em] whitespace-nowrap"
+                        style={{ color }}
+                      >
+                        {isCurrent ? "Continue →" : "Open →"}
+                      </span>
+                    )}
+                  </>
+                );
+
+                return (
+                  <li key={lesson.id} className="border-b border-[#f0ece4] last:border-b-0">
+                    {unlocked ? (
+                      <Link
+                        href={`/dashboard/courses/${course.slug}/lessons/${lesson.id}`}
+                        className="w-full flex items-center gap-4 px-7 py-4 min-h-[56px] text-left hover:bg-[#faf8f4] transition-colors"
+                      >
+                        {inner}
+                      </Link>
+                    ) : (
+                      <div className="w-full flex items-center gap-4 px-7 py-4 min-h-[56px] cursor-not-allowed">
+                        {inner}
+                      </div>
+                    )}
                   </li>
                 );
               })}
@@ -214,9 +203,7 @@ export default function CourseContent({
             <p className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#c9923a] mb-1">
               Assessments
             </p>
-            <h2 className="font-playfair text-lg font-bold text-[#1a1a1a]">
-              Course Examinations
-            </h2>
+            <h2 className="font-playfair text-lg font-bold text-[#1a1a1a]">Course Examinations</h2>
           </div>
           <ul>
             {course.exams.map((exam) => (
@@ -253,26 +240,6 @@ export default function CourseContent({
             ))}
           </ul>
         </div>
-      )}
-
-      {/* Lesson viewer overlay */}
-      {openLesson && (
-        <LessonViewer
-          lessonId={openLesson.id}
-          lessonTitle={openLesson.title}
-          content={openLesson.content}
-          schoolColor={color}
-          schoolName={course.school.name}
-          wuValue={openLesson.wuValue}
-          alreadyCompleted={completed.has(openLesson.id)}
-          onClose={() => {
-            setOpenLesson(null);
-            router.refresh();
-          }}
-          onCompleted={() => {
-            setCompleted((prev) => new Set(prev).add(openLesson.id));
-          }}
-        />
       )}
     </div>
   );

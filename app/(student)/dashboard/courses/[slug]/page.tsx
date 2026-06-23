@@ -45,6 +45,7 @@ export default async function CourseDetailPage({
     <CourseContent
       course={{
         id: course.id,
+        slug: course.slug,
         title: course.title,
         description: course.description,
         level: course.level,
@@ -62,7 +63,6 @@ export default async function CourseDetailPage({
           lessons: m.lessons.map((l) => ({
             id: l.id,
             title: l.title,
-            content: l.content,
             order: l.order,
             wuValue: l.wuValue,
           })),
