@@ -7,23 +7,40 @@ import {
 } from "lucide-react";
 
 // ── School icon system ─────────────────────────────────────────────────────────
-// One consistent Lucide line-icon per school; no emoji, no mismatched styles.
 type LucideIcon = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
 
 const SCHOOL_META: Record<string, { Icon: LucideIcon; color: string }> = {
-  "Herbal Medicine":           { Icon: Leaf,        color: "#4a7c59" },
-  "School of Herbal Medicine": { Icon: Leaf,        color: "#4a7c59" },
-  "TCM":                       { Icon: Wind,        color: "#9b4444" },
-  "Traditional Chinese Medicine": { Icon: Wind,     color: "#9b4444" },
-  "School of Traditional Chinese Medicine": { Icon: Wind, color: "#9b4444" },
-  "Functional Wellness":       { Icon: Activity,    color: "#c9923a" },
-  "School of Functional Wellness": { Icon: Activity, color: "#c9923a" },
-  "Homeopathic Studies":       { Icon: Droplets,    color: "#4a7c9e" },
-  "School of Homeopathic Studies": { Icon: Droplets, color: "#4a7c9e" },
-  "Practice Building":         { Icon: Users,       color: "#7c5c9e" },
-  "School of Practice Building": { Icon: Users,     color: "#7c5c9e" },
-  "Wellness Entrepreneurship": { Icon: TrendingUp,  color: "#b87333" },
-  "School of Wellness Entrepreneurship": { Icon: TrendingUp, color: "#b87333" },
+  "Herbal Medicine":                          { Icon: Leaf,        color: "#4a7c59" },
+  "School of Herbal Medicine":                { Icon: Leaf,        color: "#4a7c59" },
+  "TCM":                                      { Icon: Wind,        color: "#9b4444" },
+  "Traditional Chinese Medicine":             { Icon: Wind,        color: "#9b4444" },
+  "School of Traditional Chinese Medicine":   { Icon: Wind,        color: "#9b4444" },
+  "Functional Wellness":                      { Icon: Activity,    color: "#c9923a" },
+  "School of Functional Wellness":            { Icon: Activity,    color: "#c9923a" },
+  "Homeopathic Studies":                      { Icon: Droplets,    color: "#4a7c9e" },
+  "School of Homeopathic Studies":            { Icon: Droplets,    color: "#4a7c9e" },
+  "Practice Building":                        { Icon: Users,       color: "#7c5c9e" },
+  "School of Practice Building":              { Icon: Users,       color: "#7c5c9e" },
+  "Wellness Entrepreneurship":                { Icon: TrendingUp,  color: "#b87333" },
+  "School of Wellness Entrepreneurship":      { Icon: TrendingUp,  color: "#b87333" },
+};
+
+// ── Urgency tiers ──────────────────────────────────────────────────────────────
+type UrgencyTier = "urgent" | "soon" | "normal";
+
+function getUrgency(dueLabel: string): UrgencyTier {
+  const m = dueLabel.match(/Due in (\d+) day/);
+  if (!m) return "normal";
+  const d = parseInt(m[1]);
+  if (d <= 3) return "urgent";
+  if (d <= 7) return "soon";
+  return "normal";
+}
+
+const URGENCY_STYLES: Record<UrgencyTier, { cardBg: string; cardBorder: string; bar: string }> = {
+  urgent: { cardBg: "#FCF1EE", cardBorder: "#F0BDB4", bar: "#c0392b" },
+  soon:   { cardBg: "#FCF6EA", cardBorder: "#E8C880", bar: "#c9923a" },
+  normal: { cardBg: "#f7f5f1", cardBorder: "#d8d0c8", bar: "#9a8a78" },
 };
 
 // ── Mock data ──────────────────────────────────────────────────────────────────
@@ -84,14 +101,15 @@ const ALL_ASSIGNMENTS: Assignment[] = [
 
 // ── Shared sub-components ──────────────────────────────────────────────────────
 
+// White background so the pill pops against any card tint
 function SchoolChip({ school }: { school: string }) {
   const meta = SCHOOL_META[school];
   if (!meta) return <span className="text-[11.5px] text-[#6b6459]">{school}</span>;
   const { Icon, color } = meta;
   return (
     <span
-      className="inline-flex items-center gap-1.5 text-[11.5px] font-medium px-2 py-0.5 rounded-full border"
-      style={{ color, borderColor: `${color}40`, backgroundColor: `${color}12` }}
+      className="inline-flex items-center gap-1.5 text-[11.5px] font-medium px-2.5 py-0.5 rounded-full border bg-white"
+      style={{ color, borderColor: `${color}60` }}
     >
       <Icon size={11} strokeWidth={2} />
       {school}
@@ -127,7 +145,7 @@ function DueDateChip({ label }: { label: string }) {
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[11.5px] font-medium px-2.5 py-1 rounded-full bg-[#f5f1ea] text-[#6b6459] border border-[#e2ddd5]">
+    <span className="inline-flex items-center gap-1 text-[11.5px] font-medium px-2.5 py-1 rounded-full bg-[#f0ece4] text-[#6b6459] border border-[#ddd5c8]">
       <Clock size={11} strokeWidth={2} />
       Due in {days} days
     </span>
@@ -146,8 +164,41 @@ function SectionHeader({ label, count }: { label: string; count: number }) {
   );
 }
 
+// Segmented progress bar — one block per assignment
+function ProgressHeader({ total, done }: { total: number; done: number }) {
+  const remaining = total - done;
+  return (
+    <div className="flex items-center gap-4 mt-3 flex-wrap">
+      {/* Segments */}
+      <div className="flex gap-[3px]" style={{ width: `${Math.min(total * 26, 200)}px` }}>
+        {Array.from({ length: total }).map((_, i) => (
+          <div
+            key={i}
+            className="h-[10px] rounded-[3px] flex-1"
+            style={{ backgroundColor: i < done ? "#3B6D11" : "#ddd8d0" }}
+          />
+        ))}
+      </div>
+
+      {/* Count text */}
+      <span className="text-[13px] text-[#6b6459] font-medium whitespace-nowrap">
+        {done} of {total} complete
+      </span>
+
+      {/* Remaining alert chip — only when work is outstanding */}
+      {remaining > 0 && (
+        <span className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold px-2.5 py-1 rounded-full border"
+          style={{ backgroundColor: "#FCEBEB", color: "#A32D2D", borderColor: "#F5C0C0" }}>
+          <AlertCircle size={11} strokeWidth={2.5} />
+          {remaining} remaining
+        </span>
+      )}
+    </div>
+  );
+}
+
 // ── Pending card ───────────────────────────────────────────────────────────────
-// Visually prominent — this is what the student must act on.
+// Tinted background by urgency tier, white school pill, course below title.
 function PendingCard({
   a,
   onSubmit,
@@ -158,27 +209,24 @@ function PendingCard({
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
 
-  const days = a.dueLabel.match(/Due in (\d+) day/)?.[1];
-  const n = days ? parseInt(days) : 99;
-  // Red bar for ≤ 3 days, gold for anything else pending
-  const accentColor = n <= 3 ? "#c0392b" : "#c9923a";
+  const tier = getUrgency(a.dueLabel);
+  const { cardBg, cardBorder, bar } = URGENCY_STYLES[tier];
 
   return (
-    <div className="bg-white rounded-[16px] border border-[#e2ddd5] shadow-[0_2px_8px_rgba(0,0,0,0.07)] overflow-hidden">
+    <div
+      className="rounded-[16px] border shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden"
+      style={{ backgroundColor: cardBg, borderColor: cardBorder }}
+    >
       <div className="flex">
-        {/* Left urgency bar */}
-        <div className="w-[5px] flex-shrink-0" style={{ backgroundColor: accentColor }} />
+        {/* Left urgency bar — rounded on left by card's overflow-hidden */}
+        <div className="w-[6px] flex-shrink-0" style={{ backgroundColor: bar }} />
 
         <div className="flex-1 px-5 py-5">
-          {/* School chip + WU incentive */}
+          {/* School chip (white bg) + WU incentive */}
           <div className="flex items-start justify-between gap-4 mb-3">
             <SchoolChip school={a.school} />
-            {/* WU shown as an incentive, not a badge */}
-            <div className="flex flex-col items-end flex-shrink-0 min-w-[52px]">
-              <span
-                className="font-playfair font-bold text-2xl leading-none"
-                style={{ color: "#c9923a" }}
-              >
+            <div className="flex flex-col items-end flex-shrink-0 min-w-[48px]">
+              <span className="font-playfair font-bold text-2xl leading-none text-[#c9923a]">
                 +{a.wu}
               </span>
               <span className="text-[10px] font-semibold uppercase tracking-wider text-[#c9923a]/70 mt-0.5">
@@ -187,11 +235,11 @@ function PendingCard({
             </div>
           </div>
 
-          {/* Course + title */}
-          <p className="text-[11.5px] text-[#8a7a6a] mb-0.5">{a.course}</p>
-          <h3 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-3 leading-snug">
+          {/* Title first, then quieter course name below */}
+          <h3 className="font-playfair text-xl font-bold text-[#1a1a1a] leading-snug mb-1">
             {a.title}
           </h3>
+          <p className="text-[11.5px] text-[#8a7a6a] mb-3">{a.course}</p>
 
           {/* Due date chip */}
           <div className="mb-4">
@@ -206,7 +254,7 @@ function PendingCard({
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 autoFocus
-                className="w-full border border-[#e2ddd5] rounded-xl px-4 py-3 text-[13.5px] text-[#1a1a1a] bg-[#faf8f4] focus:outline-none focus:ring-2 focus:ring-[#2d5240] mb-3 resize-none placeholder:text-[#b0a898] leading-relaxed"
+                className="w-full border border-[#e2ddd5] rounded-xl px-4 py-3 text-[13.5px] text-[#1a1a1a] bg-white focus:outline-none focus:ring-2 focus:ring-[#2d5240] mb-3 resize-none placeholder:text-[#b0a898] leading-relaxed"
                 placeholder="Write your assignment response here…"
               />
               <div className="flex gap-3">
@@ -217,7 +265,7 @@ function PendingCard({
                   Submit Assignment
                 </button>
                 <button
-                  className="border border-[#e2ddd5] text-[13px] text-[#6b6459] px-5 py-2.5 rounded-xl hover:bg-[#f5f1ea] transition-colors"
+                  className="border border-[#d8d0c4] text-[13px] text-[#6b6459] px-5 py-2.5 rounded-xl bg-white hover:bg-[#f5f1ea] transition-colors"
                   onClick={() => setOpen(false)}
                 >
                   Cancel
@@ -244,7 +292,6 @@ function PendingCard({
 }
 
 // ── Draft card ─────────────────────────────────────────────────────────────────
-// Distinct "in-progress" visual state: parchment bg, dashed border, muted WU.
 function DraftCard({ a }: { a: Assignment }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
@@ -252,7 +299,6 @@ function DraftCard({ a }: { a: Assignment }) {
   return (
     <div className="bg-[#f7f5f1] rounded-[16px] border border-dashed border-[#c9b89e]">
       <div className="px-5 py-5">
-        {/* Status label + WU */}
         <div className="flex items-center justify-between gap-4 mb-3">
           <span className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-[#8a7a6a] uppercase tracking-wide">
             <FileEdit size={13} strokeWidth={1.75} />
@@ -264,10 +310,10 @@ function DraftCard({ a }: { a: Assignment }) {
         </div>
 
         <SchoolChip school={a.school} />
-        <p className="text-[11.5px] text-[#8a7a6a] mt-2 mb-0.5">{a.course}</p>
-        <h3 className="font-playfair text-[18px] font-bold text-[#1a1a1a] mb-3 leading-snug">
+        <h3 className="font-playfair text-[18px] font-bold text-[#1a1a1a] mt-2 mb-1 leading-snug">
           {a.title}
         </h3>
+        <p className="text-[11.5px] text-[#8a7a6a] mb-3">{a.course}</p>
 
         <div className="mb-4">
           <DueDateChip label={a.dueLabel} />
@@ -317,17 +363,13 @@ function DraftCard({ a }: { a: Assignment }) {
 }
 
 // ── Submitted card ─────────────────────────────────────────────────────────────
-// Visually resolved — green accent, feedback callout in the brand system,
-// slightly reduced visual weight so it recedes behind pending work.
+// Unchanged from previous version — keep exactly as built.
 function SubmittedCard({ a }: { a: Assignment }) {
   return (
     <div className="bg-white rounded-[16px] border border-[#e2ddd5] overflow-hidden opacity-90">
       <div className="flex">
-        {/* Green left bar — signals completion */}
         <div className="w-[5px] flex-shrink-0 bg-[#4a7c59]" />
-
         <div className="flex-1 px-5 py-4">
-          {/* School + completion mark + WU earned */}
           <div className="flex items-center justify-between gap-4 mb-3">
             <div className="flex items-center gap-2">
               <CheckCircle2 size={14} strokeWidth={2} className="text-[#4a7c59] flex-shrink-0" />
@@ -337,13 +379,10 @@ function SubmittedCard({ a }: { a: Assignment }) {
               <span className="text-[#c9923a]">✦</span> {a.wu} WU earned
             </span>
           </div>
-
           <p className="text-[11.5px] text-[#8a7a6a] mb-0.5">{a.course}</p>
           <h3 className="font-playfair text-[17px] font-bold text-[#1a1a1a] mb-3 leading-snug">
             {a.title}
           </h3>
-
-          {/* Feedback callout — warm, brand-consistent, not generic green-50 */}
           {a.feedback && (
             <div className="border-l-4 border-[#4a7c59] bg-[#f0f7f3] rounded-r-xl pl-4 pr-4 py-3">
               <p className="text-[10.5px] font-semibold uppercase tracking-widest text-[#4a7c59] mb-1.5">
@@ -352,8 +391,6 @@ function SubmittedCard({ a }: { a: Assignment }) {
               <p className="text-[13px] text-[#2d5240] leading-relaxed">{a.feedback}</p>
             </div>
           )}
-
-          {/* Submitted label if no feedback yet */}
           {!a.feedback && (
             <span className="text-[12px] text-[#8a7a6a]">{a.dueLabel} · Awaiting mentor review</span>
           )}
@@ -368,7 +405,9 @@ export default function AssignmentsPage() {
   const [submittedIds, setSubmittedIds] = useState<number[]>([]);
 
   const all: Assignment[] = ALL_ASSIGNMENTS.map((a) =>
-    submittedIds.includes(a.id) ? { ...a, status: "submitted" as const, dueLabel: "Submitted just now" } : a
+    submittedIds.includes(a.id)
+      ? { ...a, status: "submitted" as const, dueLabel: "Submitted just now" }
+      : a
   );
 
   const pending = all
@@ -386,17 +425,13 @@ export default function AssignmentsPage() {
 
   return (
     <div className="space-y-10">
-      {/* Page header */}
+      {/* Page header with segmented progress */}
       <div>
         <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Assignments</h1>
-        <div className="flex items-center gap-3 mt-2 flex-wrap">
-          <p className="text-[#6b6459] text-[14px]">
-            Submit your coursework and collect mentor feedback
-          </p>
-          <span className="text-[12px] font-medium text-[#6b6459] bg-[#ece8e0] px-2.5 py-0.5 rounded-full">
-            {doneCount} of {total} complete
-          </span>
-        </div>
+        <p className="text-[#6b6459] text-[14px] mt-1">
+          Submit your coursework and collect mentor feedback
+        </p>
+        <ProgressHeader total={total} done={doneCount} />
       </div>
 
       {/* Action Required — pending, sorted by urgency */}
@@ -427,7 +462,7 @@ export default function AssignmentsPage() {
         </section>
       )}
 
-      {/* Completed — submitted with feedback */}
+      {/* Completed */}
       {done.length > 0 && (
         <section>
           <SectionHeader label="Completed" count={done.length} />
@@ -439,7 +474,6 @@ export default function AssignmentsPage() {
         </section>
       )}
 
-      {/* Empty state */}
       {all.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="w-14 h-14 rounded-full bg-[#f0f7f3] flex items-center justify-center mb-4">
