@@ -32,13 +32,13 @@ const navItems = [
   { href: "/dashboard/profile", label: "My Profile", icon: User },
 ];
 
-export default function DashboardNav() {
+export default function DashboardNav({ onNavClick }: { onNavClick?: () => void }) {
   const pathname = usePathname();
 
   return (
     <nav className="flex flex-col h-full">
       <div className="px-4 py-4 border-b border-[#e2ddd5]">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" onClick={onNavClick} className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-[#4a7c59] flex items-center justify-center text-white text-xs font-bold font-playfair">
             ANW
           </div>
@@ -56,6 +56,7 @@ export default function DashboardNav() {
               <li key={href}>
                 <Link
                   href={href}
+                  onClick={onNavClick}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                     active
@@ -75,6 +76,7 @@ export default function DashboardNav() {
       <div className="p-3 border-t border-[#e2ddd5]">
         <Link
           href="/login"
+          onClick={onNavClick}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#6b6459] hover:bg-[#f5f1ea] hover:text-red-600 transition-all w-full"
         >
           <LogOut size={16} />
