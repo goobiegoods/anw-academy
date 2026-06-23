@@ -133,6 +133,7 @@ model Lesson {
   title              String
   content            String
   videoUrl           String?
+  heroImageUrl       String?
   objectives         String[]
   keyTerms           String[]
   reflectionQuestion String?

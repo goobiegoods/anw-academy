@@ -94,6 +94,7 @@ export default async function LessonDetailPage({
         id: rawLesson.id,
         title: rawLesson.title,
         wuValue: rawLesson.wuValue,
+        heroImageUrl: rawLesson.heroImageUrl ?? null,
         content: parsedContent,
       }}
       userId={user?.id ?? null}

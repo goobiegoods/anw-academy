@@ -50,6 +50,7 @@ type Props = {
     id: string;
     title: string;
     wuValue: number;
+    heroImageUrl: string | null;
     content: import("@/lib/lesson-types").LessonContent;
   };
   userId: string | null;
@@ -73,7 +74,28 @@ const SECTION_DEFS = [
 
 // ─── Botanical hero ───────────────────────────────────────────────────────────
 
-function BotanicalHero({ color, icon }: { color: string; icon: string }) {
+function BotanicalHero({
+  color,
+  icon,
+  heroImageUrl,
+}: {
+  color: string;
+  icon: string;
+  heroImageUrl: string | null;
+}) {
+  if (heroImageUrl) {
+    return (
+      <div className="relative w-full h-[260px] rounded-2xl overflow-hidden mb-6 bg-[#fdf6e8]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={heroImageUrl}
+          alt="Botanical illustration"
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-[180px] rounded-2xl overflow-hidden mb-6">
       <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #fdf6e8 0%, #eedcb8 100%)" }} />
@@ -471,7 +493,7 @@ export default function LessonPageLayout({ course, lesson, userId, lessonIndex, 
               Foundation
             </span>
           </div>
-          <BotanicalHero color={course.school.color} icon={course.school.icon} />
+          <BotanicalHero color={course.school.color} icon={course.school.icon} heroImageUrl={lesson.heroImageUrl} />
           {objCard && (
             <div className="mt-6 p-5 bg-white border border-[#e2ddd5] rounded-xl">
               <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#6b6459] mb-3">What You Will Learn</p>
