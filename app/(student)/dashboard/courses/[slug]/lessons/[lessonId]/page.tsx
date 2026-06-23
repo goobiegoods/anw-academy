@@ -58,6 +58,8 @@ export default async function LessonDetailPage({
 
   return (
     <LessonPageLayout
+      lessonIndex={currentIdx}
+      totalLessons={orderedLessons.length}
       course={{
         id: course.id,
         title: course.title,
