@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type SchoolOption = { name: string; color: string; courses: string[] };
 
@@ -187,22 +189,58 @@ export default function AITutor({ schools }: { schools: SchoolOption[] }) {
         ) : (
           messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div
-                className="max-w-[85%] rounded-2xl px-4 py-3 text-[13.5px] whitespace-pre-wrap"
-                style={{
-                  lineHeight: 1.8,
-                  backgroundColor: m.role === "user" ? accent : "#ffffff",
-                  color: m.role === "user" ? "#ffffff" : "#1a1a1a",
-                  border: m.role === "user" ? "none" : "1px solid #e2ddd5",
-                }}
-              >
-                {m.content || (
-                  <span className="inline-flex gap-1 items-center text-[#9a9088]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                    The Scholar is thinking…
-                  </span>
-                )}
-              </div>
+              {m.role === "user" ? (
+                <div
+                  className="max-w-[85%] rounded-2xl px-4 py-3 text-[13.5px] whitespace-pre-wrap"
+                  style={{ lineHeight: 1.8, backgroundColor: accent, color: "#ffffff" }}
+                >
+                  {m.content}
+                </div>
+              ) : (
+                <div
+                  className="max-w-[85%] rounded-2xl px-4 py-3 text-[13.5px]"
+                  style={{ lineHeight: 1.8, backgroundColor: "#ffffff", color: "#1a1a1a", border: "1px solid #e2ddd5" }}
+                >
+                  {m.content ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h1: ({ children }) => <h1 className="font-playfair text-lg font-bold text-[#1a1a1a] mt-3 mb-1.5 first:mt-0">{children}</h1>,
+                        h2: ({ children }) => <h2 className="font-playfair text-base font-bold text-[#1a1a1a] mt-3 mb-1 first:mt-0">{children}</h2>,
+                        h3: ({ children }) => <h3 className="font-semibold text-[#1a1a1a] mt-2 mb-0.5 first:mt-0">{children}</h3>,
+                        p: ({ children }) => <p className="mb-2.5 last:mb-0">{children}</p>,
+                        strong: ({ children }) => <strong className="font-semibold text-[#1a1a1a]">{children}</strong>,
+                        em: ({ children }) => <em className="italic">{children}</em>,
+                        ul: ({ children }) => <ul className="list-disc pl-5 mb-2.5 space-y-0.5">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal pl-5 mb-2.5 space-y-0.5">{children}</ol>,
+                        li: ({ children }) => <li>{children}</li>,
+                        blockquote: ({ children }) => (
+                          <blockquote className="border-l-4 border-[#c9923a] bg-[#fdf6e8] pl-3 pr-2 py-1.5 my-2.5 rounded-r italic text-[#6b6459]">
+                            {children}
+                          </blockquote>
+                        ),
+                        table: ({ children }) => (
+                          <div className="overflow-x-auto my-2.5">
+                            <table className="w-full text-[12px] border-collapse border border-[#e2ddd5]">{children}</table>
+                          </div>
+                        ),
+                        thead: ({ children }) => <thead className="bg-[#f5f1ea]">{children}</thead>,
+                        th: ({ children }) => <th className="border border-[#e2ddd5] px-2.5 py-1.5 text-left font-semibold">{children}</th>,
+                        td: ({ children }) => <td className="border border-[#e2ddd5] px-2.5 py-1.5">{children}</td>,
+                        code: ({ children }) => <code className="bg-[#f5f1ea] px-1 py-0.5 rounded text-[11.5px] font-mono">{children}</code>,
+                        hr: () => <hr className="border-[#e2ddd5] my-3" />,
+                      }}
+                    >
+                      {m.content}
+                    </ReactMarkdown>
+                  ) : (
+                    <span className="inline-flex gap-1 items-center text-[#9a9088]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                      The Scholar is thinking…
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           ))
         )}
