@@ -1,47 +1,87 @@
-import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin";
 
-const schools = [
-  { name: "School of Herbal Medicine", slug: "herbal-medicine", icon: "🌿", color: "#4a7c59", courses: 8, departments: 6, enrollments: 142, avgProgress: 54 },
-  { name: "School of Traditional Chinese Medicine", slug: "traditional-chinese-medicine", icon: "☯️", color: "#c0392b", courses: 8, departments: 7, enrollments: 96, avgProgress: 41 },
-  { name: "School of Homeopathic Studies", slug: "homeopathic-studies", icon: "💧", color: "#5b4fcf", courses: 8, departments: 7, enrollments: 72, avgProgress: 38 },
-  { name: "School of Functional Wellness", slug: "functional-wellness", icon: "⚡", color: "#d4882a", courses: 8, departments: 7, enrollments: 118, avgProgress: 47 },
-  { name: "School of Practice Building", slug: "practice-building", icon: "🏛️", color: "#2c6e8a", courses: 8, departments: 7, enrollments: 87, avgProgress: 62 },
-  { name: "School of Wellness Entrepreneurship", slug: "wellness-entrepreneurship", icon: "🚀", color: "#7a5c3a", courses: 8, departments: 8, enrollments: 65, avgProgress: 44 },
-];
+export const dynamic = "force-dynamic";
 
-export default function AdminSchoolsPage() {
+export default async function AdminSchoolsPage() {
+  await requireAdmin();
+
+  const schools = await prisma.school.findMany({
+    orderBy: { order: "asc" },
+    include: {
+      _count: { select: { departments: true, courses: true } },
+      courses: {
+        select: {
+          enrollments: { select: { progressPercent: true } },
+        },
+      },
+    },
+  });
+
+  const schoolData = schools.map((s) => {
+    const allProgress = s.courses.flatMap((c) => c.enrollments.map((e) => e.progressPercent));
+    const totalEnrollments = allProgress.length;
+    const avgProgress = totalEnrollments > 0
+      ? Math.round(allProgress.reduce((a, b) => a + b, 0) / totalEnrollments)
+      : 0;
+    return {
+      id: s.id,
+      name: s.name,
+      slug: s.slug,
+      icon: s.icon,
+      color: s.color,
+      departments: s._count.departments,
+      courses: s._count.courses,
+      enrollments: totalEnrollments,
+      avgProgress,
+    };
+  });
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Schools</h1>
-        <p className="text-[#6b6459] mt-1">Manage the six schools and their curricula</p>
+        <p className="text-[#6b6459] mt-1">
+          {schools.length} schools · real enrollment and progress data
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {schools.map((school) => (
-          <div key={school.slug} className="bg-white border border-[#e2ddd5] rounded-[16px] shadow-card overflow-hidden">
+        {schoolData.map((school) => (
+          <div
+            key={school.slug}
+            className="rounded-[16px] overflow-hidden"
+            style={{ backgroundColor: "#FAF7F0", border: "0.5px solid #DDD5C5" }}
+          >
             <div className="h-1.5" style={{ backgroundColor: school.color }} />
             <div className="p-5">
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0" style={{ backgroundColor: `${school.color}15` }}>
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                  style={{ backgroundColor: `${school.color}18` }}
+                >
                   {school.icon}
                 </div>
                 <div className="flex-1">
                   <h2 className="font-playfair font-bold text-[#1a1a1a]">{school.name}</h2>
                   <div className="flex items-center gap-3 mt-1 text-xs text-[#6b6459]">
-                    <span>{school.departments} departments</span>
+                    <span>{school.departments} department{school.departments !== 1 ? "s" : ""}</span>
                     <span>·</span>
-                    <span>{school.courses} courses</span>
+                    <span>{school.courses} course{school.courses !== 1 ? "s" : ""}</span>
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 text-center">
-                <div className="bg-[#f5f1ea] rounded-xl p-3">
-                  <p className="text-2xl font-bold font-playfair text-[#1a1a1a]">{school.enrollments}</p>
+                <div className="rounded-xl p-3" style={{ backgroundColor: "rgba(28,51,39,0.05)" }}>
+                  <p className="text-2xl font-bold font-playfair text-[#1a1a1a]">
+                    {school.enrollments}
+                  </p>
                   <p className="text-xs text-[#6b6459]">Enrollments</p>
                 </div>
-                <div className="bg-[#f5f1ea] rounded-xl p-3">
-                  <p className="text-2xl font-bold font-playfair text-[#1a1a1a]">{school.avgProgress}%</p>
+                <div className="rounded-xl p-3" style={{ backgroundColor: "rgba(28,51,39,0.05)" }}>
+                  <p className="text-2xl font-bold font-playfair text-[#1a1a1a]">
+                    {school.avgProgress}%
+                  </p>
                   <p className="text-xs text-[#6b6459]">Avg Progress</p>
                 </div>
               </div>
