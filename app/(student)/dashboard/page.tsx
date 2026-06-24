@@ -9,8 +9,28 @@ export const dynamic = "force-dynamic";
 // ── Avatar colors cycling through brand palette ────────────────────────────────
 const AVATAR_BG = ["#2d5240", "#4a7c9e", "#9b4444", "#7c5c9e", "#b87333"];
 
+// ── Derive rgba tints from a hex school color ──────────────────────────────────
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace("#", "");
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+
 // ── Icon per WU transaction source type ───────────────────────────────────────
-function ActivityIcon({ type }: { type: string }) {
+function ActivityIcon({ type, dark = false }: { type: string; dark?: boolean }) {
+  if (dark) {
+    switch (type) {
+      case "quiz":
+        return <Award size={14} strokeWidth={2} style={{ color: "#D4A94A" }} />;
+      case "lesson":
+        return <CheckCircle2 size={14} strokeWidth={2} style={{ color: "rgba(255,255,255,0.85)" }} />;
+      case "assignment":
+        return <FileText size={14} strokeWidth={2} style={{ color: "rgba(255,255,255,0.85)" }} />;
+      case "discussion":
+        return <MessageCircle size={14} strokeWidth={2} style={{ color: "rgba(255,255,255,0.85)" }} />;
+      default:
+        return <BookOpen size={14} strokeWidth={2} style={{ color: "rgba(255,255,255,0.85)" }} />;
+    }
+  }
   switch (type) {
     case "lesson":
       return <CheckCircle2 size={14} strokeWidth={2} className="text-[#4a7c59]" />;
@@ -345,15 +365,15 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ── ANW SCHOLAR BANNER — purple, distinct from green Continue ───────── */}
+      {/* ── ANW SCHOLAR BANNER — deep burgundy, within the warm institutional palette */}
       <Link href="/dashboard/ai-tutor">
         <div
-          className="rounded-[20px] px-7 py-6 hover:shadow-[0_8px_32px_rgba(42,36,84,0.3)] transition-shadow"
-          style={{ background: "linear-gradient(135deg, #2A2454 0%, #3C3489 100%)" }}
+          className="rounded-[20px] px-7 py-6 hover:shadow-[0_8px_32px_rgba(74,27,40,0.3)] transition-shadow"
+          style={{ background: "linear-gradient(135deg, #4A1B28 0%, #6E2F40 100%)" }}
         >
           <div className="flex items-center justify-between gap-6 flex-wrap">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-[#a89de8] mb-2">
+              <p className="text-[10px] uppercase tracking-[0.25em] font-semibold text-[#f0c0c8] mb-2">
                 AI Learning Companion
               </p>
               <h2 className="font-playfair text-2xl font-bold text-white mb-1">
@@ -364,7 +384,7 @@ export default async function DashboardPage() {
                 anytime.
               </p>
             </div>
-            <span className="flex-shrink-0 border border-[#a89de8]/40 text-white font-semibold text-[13px] px-6 py-3 rounded-xl hover:bg-white/10 transition-colors whitespace-nowrap">
+            <span className="flex-shrink-0 bg-white text-[#4A1B28] font-bold text-[13px] px-6 py-3 rounded-xl hover:bg-[#f5f0f1] transition-colors whitespace-nowrap">
               Ask now →
             </span>
           </div>
@@ -403,36 +423,63 @@ export default async function DashboardPage() {
               const pct = lessons.length ? Math.round((doneCount / lessons.length) * 100) : 0;
               const nextLesson = lessons.find((l) => !completedSet.has(l.id));
               const schoolColor = e.course.school.color;
+              const [r, g, b] = hexToRgb(schoolColor);
+              const cardBg = `rgba(${r},${g},${b},0.10)`;
+              const cardBorderColor = `rgba(${r},${g},${b},0.22)`;
+              const trackBg = `rgba(${r},${g},${b},0.18)`;
+              const labelColor = `rgb(${Math.round(r * 0.62)},${Math.round(g * 0.62)},${Math.round(b * 0.62)})`;
+              const titleColor = `rgb(${Math.round(r * 0.52)},${Math.round(g * 0.52)},${Math.round(b * 0.52)})`;
               return (
                 <Link key={e.id} href={`/dashboard/courses/${e.course.slug}`}>
-                  <div className="bg-white border border-[#e2ddd5] rounded-[16px] overflow-hidden hover:shadow-[0_6px_20px_rgba(0,0,0,0.09)] hover:-translate-y-0.5 transition-all h-full">
+                  <div
+                    className="rounded-[16px] overflow-hidden hover:shadow-[0_6px_20px_rgba(0,0,0,0.09)] hover:-translate-y-0.5 transition-all h-full border"
+                    style={{ backgroundColor: cardBg, borderColor: cardBorderColor }}
+                  >
                     <div className="flex h-full">
-                      {/* Colored left border matching school */}
-                      <div className="w-1 flex-shrink-0" style={{ backgroundColor: schoolColor }} />
+                      {/* Thick colored left border matching school */}
+                      <div className="w-[5px] flex-shrink-0" style={{ backgroundColor: schoolColor }} />
                       <div className="flex-1 p-5 flex flex-col">
-                        <p className="text-[11px] text-[#9a9088] mb-1">
+                        <p
+                          className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1"
+                          style={{ color: labelColor }}
+                        >
                           {e.course.school.name.replace("School of ", "")}
                         </p>
-                        <h3 className="font-playfair font-bold text-[#1a1a1a] text-[15px] leading-snug mb-3 flex-1">
+                        <h3
+                          className="font-playfair font-bold text-[15px] leading-snug mb-3 flex-1"
+                          style={{ color: titleColor }}
+                        >
                           {e.course.title}
                         </h3>
-                        <div className="h-1.5 rounded-full bg-[#f0ece4] overflow-hidden mb-1.5">
+                        <div
+                          className="h-1.5 rounded-full overflow-hidden mb-1.5"
+                          style={{ backgroundColor: trackBg }}
+                        >
                           <div
                             className="h-full rounded-full"
                             style={{ width: `${pct}%`, backgroundColor: schoolColor }}
                           />
                         </div>
-                        <div className="flex items-center justify-between text-[11px] text-[#9a9088] mb-3">
+                        <div
+                          className="flex items-center justify-between text-[11px] mb-3"
+                          style={{ color: labelColor }}
+                        >
                           <span>{pct}% complete</span>
                           <span>{doneCount}/{lessons.length} lessons</span>
                         </div>
                         {nextLesson ? (
-                          <p className="text-[12px] text-[#1a1a1a] border-t border-[#f0ece4] pt-3 line-clamp-1">
-                            <span className="text-[#9a9088]">Next: </span>
+                          <p
+                            className="text-[12px] border-t pt-3 line-clamp-1"
+                            style={{ color: titleColor, borderColor: cardBorderColor }}
+                          >
+                            <span style={{ color: labelColor, opacity: 0.7 }}>Next: </span>
                             {nextLesson.title}
                           </p>
                         ) : (
-                          <p className="text-[12px] text-[#4a7c59] font-medium border-t border-[#f0ece4] pt-3">
+                          <p
+                            className="text-[12px] font-medium border-t pt-3"
+                            style={{ color: schoolColor, borderColor: cardBorderColor }}
+                          >
                             ✓ Course complete
                           </p>
                         )}
@@ -449,96 +496,134 @@ export default async function DashboardPage() {
       {/* ── THIS WEEK + RECENT ACTIVITY ─────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* This Week — shaded parchment background */}
-        <div className="bg-[#f7f5f1] rounded-2xl p-6">
-          <h2 className="font-playfair text-lg font-bold text-[#1a1a1a] mb-4">This Week</h2>
+        {/* This Week — warm gold-parchment */}
+        <div className="rounded-2xl p-6" style={{ backgroundColor: "#F3ECDA" }}>
+          <h2 className="font-playfair text-lg font-bold text-[#4A3A1A] mb-4">This Week</h2>
 
           {discussions.length === 0 && exams.length === 0 ? (
             <div className="py-6 text-center">
-              <p className="text-[13px] text-[#8a7a6a] leading-relaxed">
+              <p className="text-[13px] text-[#6B5A3A] leading-relaxed">
                 No upcoming items — enjoy some free study time, or explore a new lesson.
               </p>
             </div>
           ) : (
-            <div>
+            <div className="space-y-2">
+              {/* Discussions — soon tier: gold left border, 45% white bg */}
               {discussions.slice(0, 3).map((d) => (
-                <Link
+                <div
                   key={d.id}
-                  href={`/dashboard/discussions/${d.id}`}
-                  className="flex items-center gap-3 py-3 border-b border-[#e8e3db] last:border-0 group"
+                  className="rounded-lg overflow-hidden"
+                  style={{ borderLeft: "4px solid #C9941D", backgroundColor: "rgba(255,255,255,0.45)" }}
                 >
-                  <span className="w-2 h-2 rounded-full bg-[#c9923a] flex-shrink-0" />
-                  {/* Fixed-width label ensures consistent row height regardless of text */}
-                  <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#c9923a] w-[58px] flex-shrink-0">
-                    Discuss
-                  </span>
-                  <span className="flex-1 text-[13px] text-[#1a1a1a] group-hover:text-[#4a7c59] leading-snug line-clamp-1 min-w-0">
-                    {d.title}
-                  </span>
-                  <ChevronRight size={14} strokeWidth={2} className="text-[#b0a898] flex-shrink-0" />
-                </Link>
+                  <Link
+                    href={`/dashboard/discussions/${d.id}`}
+                    className="flex items-center gap-3 px-3 py-2.5 group"
+                  >
+                    <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#C9941D] w-[58px] flex-shrink-0">
+                      Discuss
+                    </span>
+                    <span className="flex-1 text-[13px] text-[#4A3A1A] group-hover:text-[#2D4A0E] leading-snug line-clamp-1 min-w-0">
+                      {d.title}
+                    </span>
+                    <ChevronRight size={14} strokeWidth={2} className="text-[#B0A580] flex-shrink-0" />
+                  </Link>
+                </div>
               ))}
+              {/* Exams — urgent tier: coral left border, 65% white bg */}
               {exams.slice(0, 2).map((x) => (
-                <Link
+                <div
                   key={x.id}
-                  href={`/dashboard/exams/${x.id}`}
-                  className="flex items-center gap-3 py-3 border-b border-[#e8e3db] last:border-0 group"
+                  className="rounded-lg overflow-hidden"
+                  style={{ borderLeft: "4px solid #C0392B", backgroundColor: "rgba(255,255,255,0.65)" }}
                 >
-                  <span className="w-2 h-2 rounded-full bg-[#2d5282] flex-shrink-0" />
-                  <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#2d5282] w-[58px] flex-shrink-0">
-                    Exam
-                  </span>
-                  <span className="flex-1 text-[13px] text-[#1a1a1a] group-hover:text-[#4a7c59] leading-snug line-clamp-1 min-w-0">
-                    {x.title}
-                  </span>
-                  <ChevronRight size={14} strokeWidth={2} className="text-[#b0a898] flex-shrink-0" />
-                </Link>
+                  <Link
+                    href={`/dashboard/exams/${x.id}`}
+                    className="flex items-center gap-3 px-3 py-2.5 group"
+                  >
+                    <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#C0392B] w-[58px] flex-shrink-0">
+                      Exam
+                    </span>
+                    <span className="flex-1 text-[13px] text-[#4A3A1A] group-hover:text-[#2D4A0E] leading-snug line-clamp-1 min-w-0">
+                      {x.title}
+                    </span>
+                    <ChevronRight size={14} strokeWidth={2} className="text-[#B0A580] flex-shrink-0" />
+                  </Link>
+                </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Recent Activity — icon per type, WU serif right-aligned */}
-        <div className="bg-white border border-[#e2ddd5] rounded-2xl p-6">
+        {/* Recent Activity — dark forest green, bookending the WU stat card */}
+        <div className="rounded-2xl p-6" style={{ backgroundColor: "#1C3327" }}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-playfair text-lg font-bold text-[#1a1a1a]">Recent Activity</h2>
-            <Link href="/dashboard/wellness-units" className="text-[12px] text-[#4a7c59] font-medium hover:underline">
+            <h2 className="font-playfair text-lg font-bold text-white">Recent Activity</h2>
+            <Link
+              href="/dashboard/wellness-units"
+              className="text-[12px] font-medium hover:underline"
+              style={{ color: "#D4A94A" }}
+            >
               View all
             </Link>
           </div>
 
           {recentTransactions.length === 0 ? (
             <div className="py-6 text-center">
-              <p className="text-[13px] text-[#8a7a6a] leading-relaxed">
+              <p className="text-[13px] leading-relaxed" style={{ color: "rgba(255,255,255,0.50)" }}>
                 No activity yet — complete your first lesson to earn Wellness Units.
               </p>
             </div>
           ) : (
             <div>
-              {recentTransactions.map((tx) => (
-                <div
-                  key={tx.id}
-                  className="flex items-center gap-3 py-3 border-b border-[#f0ece4] last:border-0"
-                >
-                  <div className="w-8 h-8 rounded-full bg-[#f5f1ea] flex items-center justify-center flex-shrink-0">
-                    <ActivityIcon type={tx.sourceType} />
+              {recentTransactions.map((tx) => {
+                const isMilestone = tx.sourceType === "quiz";
+                return (
+                  <div
+                    key={tx.id}
+                    className="flex items-center gap-3 py-3 border-b last:border-0"
+                    style={{ borderColor: "rgba(255,255,255,0.08)" }}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: isMilestone
+                          ? "rgba(212,169,74,0.28)"
+                          : "rgba(255,255,255,0.12)",
+                      }}
+                    >
+                      <ActivityIcon type={tx.sourceType} dark />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="text-[13px] leading-snug line-clamp-2"
+                        style={{ color: "rgba(255,255,255,0.90)" }}
+                      >
+                        {tx.description}
+                      </p>
+                      <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>
+                        {new Date(tx.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end flex-shrink-0 min-w-[28px]">
+                      <span
+                        className="font-playfair font-bold text-xl leading-none"
+                        style={{ color: "#D4A94A" }}
+                      >
+                        +{tx.amount}
+                      </span>
+                      <span
+                        className="text-[9px] font-semibold uppercase tracking-wide mt-0.5"
+                        style={{ color: "rgba(212,169,74,0.65)" }}
+                      >
+                        WU
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] text-[#1a1a1a] leading-snug line-clamp-1">
-                      {tx.description}
-                    </p>
-                    <p className="text-[11px] text-[#9a9088] mt-0.5">
-                      {new Date(tx.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                  <span className="font-playfair font-bold text-[#c9923a] text-[15px] whitespace-nowrap flex-shrink-0">
-                    +{tx.amount} WU
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

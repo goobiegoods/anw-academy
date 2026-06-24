@@ -42,6 +42,7 @@ model User {
   capstones          Capstone[]
   certifications     StudentCertification[]
   lessonProgress     LessonProgress[]
+  supportMessages    SupportMessage[]
 }
 
 model StudentProfile {
@@ -386,4 +387,17 @@ model Announcement {
   body      String
   audience  String   @default("all")
   createdAt DateTime @default(now())
+}
+
+model SupportMessage {
+  id         String    @id @default(uuid())
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id])
+  name       String
+  email      String
+  subject    String
+  message    String
+  status     String    @default("open")
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
 }

@@ -1,13 +1,9 @@
 import AdminNav from "./AdminNav";
 
-interface AdminLayoutProps {
-  children: React.ReactNode;
-}
-
-export default function AdminLayout({ children }: AdminLayoutProps) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen bg-[#faf8f4] overflow-hidden">
-      <aside className="w-64 flex-shrink-0 bg-white border-r border-[#e2ddd5] flex flex-col">
+      <aside className="hidden lg:flex w-64 flex-shrink-0 flex-col">
         <AdminNav />
       </aside>
       <main className="flex-1 overflow-y-auto">

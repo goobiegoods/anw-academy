@@ -3,6 +3,11 @@ import { MessageSquare } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace("#", "");
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+
 export const dynamic = "force-dynamic";
 
 export default async function DiscussionsPage() {
@@ -45,47 +50,97 @@ export default async function DiscussionsPage() {
           {discussions.map((d) => {
             const myPost = user ? d.posts.find((p) => p.userId === user.id) : null;
             const schoolColor = d.course.school.color;
+            const [r, g, b] = hexToRgb(schoolColor);
+            const cardBg = `rgba(${r},${g},${b},0.10)`;
+            const cardBorderColor = `rgba(${r},${g},${b},0.22)`;
+            const promptBg = `rgba(255,255,255,0.50)`;
+            const labelColor = `rgb(${Math.round(r * 0.62)},${Math.round(g * 0.62)},${Math.round(b * 0.62)})`;
+            const titleColor = `rgb(${Math.round(r * 0.52)},${Math.round(g * 0.52)},${Math.round(b * 0.52)})`;
 
             return (
               <Link key={d.id} href={`/dashboard/discussions/${d.id}`}>
-                <div className="bg-white border border-[#e2ddd5] rounded-[16px] shadow-card overflow-hidden hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200">
-                  <div className="h-1" style={{ backgroundColor: schoolColor }} />
-                  <div className="p-6">
-                    <div className="flex items-start justify-between flex-wrap gap-3 mb-3">
-                      <div>
-                        <p className="text-xs text-[#6b6459] mb-1">
-                          {d.course.school.icon} {d.course.title}
-                        </p>
-                        <h2 className="font-playfair text-xl font-bold text-[#1a1a1a]">
-                          {d.title}
-                        </h2>
+                <div
+                  className="rounded-[16px] overflow-hidden border hover:shadow-[0_6px_20px_rgba(0,0,0,0.09)] hover:-translate-y-0.5 transition-all duration-200"
+                  style={{ backgroundColor: cardBg, borderColor: cardBorderColor }}
+                >
+                  <div className="flex">
+                    <div className="w-[5px] flex-shrink-0" style={{ backgroundColor: schoolColor }} />
+                    <div className="flex-1 p-6">
+                      <div className="flex items-start justify-between flex-wrap gap-3 mb-3">
+                        <div className="min-w-0">
+                          <p
+                            className="text-[10px] uppercase tracking-[0.18em] font-bold mb-1.5"
+                            style={{ color: labelColor }}
+                          >
+                            {d.course.school.name.replace("School of ", "")} · {d.course.title}
+                          </p>
+                          <h2
+                            className="font-playfair text-xl font-bold leading-snug"
+                            style={{ color: titleColor }}
+                          >
+                            {d.title}
+                          </h2>
+                        </div>
+                        <div
+                          className="flex items-center gap-1.5 text-[12px] font-medium flex-shrink-0"
+                          style={{ color: labelColor }}
+                        >
+                          <MessageSquare size={13} strokeWidth={2} />
+                          {d.posts.length} {d.posts.length !== 1 ? "posts" : "post"}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5 text-sm text-[#6b6459]">
-                        <MessageSquare size={14} />
-                        {d.posts.length} post{d.posts.length !== 1 ? "s" : ""}
-                      </div>
-                    </div>
 
-                    <div className="bg-[#f5f1ea] rounded-xl p-4 mb-4">
-                      <p className="text-sm text-[#6b6459] italic line-clamp-2">{d.prompt}</p>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      {myPost ? (
-                        <span className="flex items-center gap-2 text-sm text-[#4a7c59] font-medium">
-                          ✓ You have posted in this discussion
-                        </span>
-                      ) : (
-                        <span className="text-sm text-[#6b6459]">
-                          Original post +{d.wuOriginalPost} WU · Reply +{d.wuReply} WU
-                        </span>
-                      )}
-                      <span
-                        className="text-[11px] font-bold uppercase tracking-[0.1em]"
-                        style={{ color: schoolColor }}
+                      {/* Prompt — white inset within the tinted card */}
+                      <div
+                        className="rounded-xl px-4 py-3 mb-4 border"
+                        style={{ backgroundColor: promptBg, borderColor: cardBorderColor }}
                       >
-                        {myPost ? "View Thread →" : "Join →"}
-                      </span>
+                        <p className="text-[13px] italic line-clamp-2" style={{ color: titleColor }}>
+                          {d.prompt}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        {myPost ? (
+                          <span
+                            className="text-[12px] font-medium flex items-center gap-1.5"
+                            style={{ color: labelColor }}
+                          >
+                            ✓ You have posted in this discussion
+                          </span>
+                        ) : (
+                          <span className="text-[12px]" style={{ color: labelColor }}>
+                            Original post{" "}
+                            <span className="font-playfair font-bold text-[15px] text-[#c9923a]">
+                              +{d.wuOriginalPost}
+                            </span>
+                            <span className="text-[9px] font-semibold uppercase tracking-wide text-[#c9923a]/70 ml-0.5">
+                              WU
+                            </span>
+                            {" · "}Reply{" "}
+                            <span className="font-playfair font-bold text-[15px] text-[#c9923a]">
+                              +{d.wuReply}
+                            </span>
+                            <span className="text-[9px] font-semibold uppercase tracking-wide text-[#c9923a]/70 ml-0.5">
+                              WU
+                            </span>
+                          </span>
+                        )}
+                        <span
+                          className="inline-flex items-center text-[13px] font-bold px-5 py-2 rounded-xl flex-shrink-0"
+                          style={
+                            myPost
+                              ? {
+                                  border: `1px solid ${cardBorderColor}`,
+                                  color: labelColor,
+                                  backgroundColor: "rgba(255,255,255,0.55)",
+                                }
+                              : { backgroundColor: schoolColor, color: "#ffffff" }
+                          }
+                        >
+                          {myPost ? "View Thread →" : "Join →"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>

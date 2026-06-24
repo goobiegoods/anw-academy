@@ -1,5 +1,3 @@
-import WUBadge from "@/components/shared/WUBadge";
-import ProgressBar from "@/components/shared/ProgressBar";
 import { getLevelTitle, getWUForLevel } from "@/lib/utils";
 
 const transactions = [
@@ -22,83 +20,120 @@ const sourceColors: Record<string, string> = {
   capstone: "#c0392b",
 };
 
+const earnGuide = [
+  { type: "Lesson",     wu: "1",     label: "WU", color: "#4a7c59" },
+  { type: "Quiz",       wu: "2",     label: "WU", color: "#5b4fcf" },
+  { type: "Discussion", wu: "2",     label: "WU", color: "#2c6e8a" },
+  { type: "Assignment", wu: "5",     label: "WU", color: "#d4882a" },
+  { type: "Case Study", wu: "10–25", label: "WU", color: "#c9923a" },
+  { type: "Capstone",   wu: "50",    label: "WU", color: "#c0392b" },
+];
+
 const currentWU = 342;
 const currentLevel = 3;
 const levelData = getWUForLevel(currentLevel);
 
+const levelProgressPct = Math.min(
+  100,
+  Math.round(((currentWU - levelData.min) / (levelData.max - levelData.min)) * 100)
+);
+const wuToNext = Math.max(0, levelData.max - currentWU);
+
+// Shared parchment card style
+const CARD_STYLE = { backgroundColor: "#FAF7F0", border: "0.5px solid #DDD5C5" } as const;
+
 export default function WellnessUnitsPage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Wellness Units</h1>
         <p className="text-[#6b6459] mt-1">Your learning currency and progress tracker</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="bg-white border border-[#e2ddd5] rounded-[16px] shadow-card p-6 sm:col-span-2">
-          <p className="text-sm text-[#6b6459] mb-1">Current Balance</p>
-          <div className="flex items-end gap-3 mb-4">
-            <span className="text-5xl font-bold font-playfair text-[#1a1a1a]">{currentWU}</span>
-            <span className="text-lg text-[#c9923a] font-semibold mb-1">WU</span>
-          </div>
-          <ProgressBar value={currentWU - levelData.min} max={levelData.max - levelData.min} color="#c9923a" showLabel />
-          <p className="text-xs text-[#6b6459] mt-1">
-            {levelData.max - currentWU} WU until Level {currentLevel + 1} — {getLevelTitle(currentLevel + 1)}
-          </p>
+      {/* ── Main stat card — dark green hero, matching Dashboard WU card ─────── */}
+      <div
+        className="rounded-[16px] p-6"
+        style={{ backgroundColor: "#1C3327", border: "0.5px solid rgba(255,255,255,0.08)" }}
+      >
+        <p className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#D4A94A] mb-3">
+          Wellness Units
+        </p>
+        <div className="flex items-baseline gap-2 mb-1">
+          <span className="font-playfair font-bold text-white" style={{ fontSize: "40px", lineHeight: 1 }}>
+            {currentWU}
+          </span>
+          <span className="font-semibold text-lg text-[#D4A94A]">WU</span>
         </div>
-
-        <div className="bg-white border border-[#e2ddd5] rounded-[16px] shadow-card p-6">
-          <p className="text-sm text-[#6b6459] mb-2">Current Level</p>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-[#4a7c59] text-white flex items-center justify-center text-xl font-bold font-playfair">
-              {currentLevel}
-            </div>
-            <div>
-              <p className="font-bold text-[#1a1a1a]">{getLevelTitle(currentLevel)}</p>
-              <p className="text-xs text-[#6b6459]">{levelData.min}–{levelData.max} WU</p>
-            </div>
-          </div>
+        <p className="text-[13px] mb-5" style={{ color: "rgba(255,255,255,0.55)" }}>
+          Level {currentLevel} · {getLevelTitle(currentLevel)}
+        </p>
+        <div className="h-1.5 rounded-full overflow-hidden mb-2" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
+          <div
+            className="h-full rounded-full"
+            style={{ width: `${levelProgressPct}%`, backgroundColor: "#D4A94A" }}
+          />
         </div>
+        <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.45)" }}>
+          {wuToNext > 0
+            ? `${wuToNext} WU to Level ${currentLevel + 1} · ${getLevelTitle(currentLevel + 1)}`
+            : `Level ${currentLevel} — ${getLevelTitle(currentLevel)}`}
+        </p>
       </div>
 
-      <div className="bg-white border border-[#e2ddd5] rounded-[16px] shadow-card p-6">
-        <h2 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-5">How to Earn WU</h2>
+      {/* ── How to Earn WU ─────────────────────────────────────────────────── */}
+      <div className="rounded-[16px] p-6" style={CARD_STYLE}>
+        <h2 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-4">How to Earn WU</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {[
-            { type: "Lesson", wu: "1 WU", color: "#4a7c59" },
-            { type: "Quiz", wu: "2 WU", color: "#5b4fcf" },
-            { type: "Discussion", wu: "2 WU", color: "#2c6e8a" },
-            { type: "Assignment", wu: "5 WU", color: "#d4882a" },
-            { type: "Case Study", wu: "10–25 WU", color: "#c9923a" },
-            { type: "Capstone", wu: "50 WU", color: "#c0392b" },
-          ].map((s) => (
-            <div key={s.type} className="text-center bg-[#f5f1ea] rounded-xl p-4">
-              <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center" style={{ backgroundColor: `${s.color}20` }}>
-                <span className="text-lg font-bold" style={{ color: s.color }}>✦</span>
+          {earnGuide.map((s) => (
+            <div
+              key={s.type}
+              className="rounded-xl p-4 text-center"
+              style={{ backgroundColor: "#FDF9F2", border: "0.5px solid #E5DDD0" }}
+            >
+              <div
+                className="w-10 h-10 rounded-full mx-auto mb-2.5 flex items-center justify-center"
+                style={{ backgroundColor: `${s.color}18` }}
+              >
+                <span className="font-playfair font-bold text-base" style={{ color: s.color }}>✦</span>
               </div>
-              <p className="text-xs font-medium text-[#1a1a1a]">{s.type}</p>
-              <p className="text-xs font-bold mt-1" style={{ color: s.color }}>{s.wu}</p>
+              <p className="text-[11px] text-[#6b6459] mb-1.5">{s.type}</p>
+              <div className="flex flex-col items-center">
+                <span className="font-playfair font-bold text-[#c9923a] text-lg leading-none">{s.wu}</span>
+                <span className="text-[9px] font-semibold uppercase tracking-wide text-[#c9923a]/70 mt-0.5">{s.label}</span>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-white border border-[#e2ddd5] rounded-[16px] shadow-card p-6">
-        <h2 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-5">Transaction History</h2>
-        <div className="space-y-3">
+      {/* ── Transaction History ──────────────────────────────────────────────── */}
+      <div className="rounded-[16px] p-6" style={CARD_STYLE}>
+        <h2 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-4">Transaction History</h2>
+        <div>
           {transactions.map((tx) => (
-            <div key={tx.id} className="flex items-center justify-between gap-4 py-3 border-b border-[#f5f1ea] last:border-0">
-              <div className="flex items-center gap-3">
+            <div
+              key={tx.id}
+              className="flex items-center justify-between gap-4 py-3 border-b last:border-0"
+              style={{ borderColor: "#E8E0D0" }}
+            >
+              <div className="flex items-center gap-3 min-w-0">
                 <div
                   className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: sourceColors[tx.sourceType] || "#4a7c59" }}
+                  style={{ backgroundColor: sourceColors[tx.sourceType] ?? "#4a7c59" }}
                 />
-                <div>
-                  <p className="text-sm text-[#1a1a1a]">{tx.description}</p>
-                  <p className="text-xs text-[#6b6459]">{tx.date}</p>
+                <div className="min-w-0">
+                  <p className="text-[13px] text-[#1a1a1a] line-clamp-1">{tx.description}</p>
+                  <p className="text-[11px] text-[#8a7a6a] mt-0.5">{tx.date}</p>
                 </div>
               </div>
-              <WUBadge value={tx.amount} size="sm" />
+              <div className="flex flex-col items-end flex-shrink-0">
+                <span className="font-playfair font-bold text-[#c9923a] text-xl leading-none">
+                  +{tx.amount}
+                </span>
+                <span className="text-[9px] font-semibold uppercase tracking-wide text-[#c9923a]/70 mt-0.5">
+                  WU
+                </span>
+              </div>
             </div>
           ))}
         </div>

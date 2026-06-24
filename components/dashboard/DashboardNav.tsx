@@ -16,56 +16,75 @@ import {
   User,
   LogOut,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/courses", label: "My Courses", icon: BookOpen },
-  { href: "/dashboard/assignments", label: "Assignments", icon: FileText },
-  { href: "/dashboard/exams", label: "Exams & Quizzes", icon: GraduationCap },
-  { href: "/dashboard/discussions", label: "Discussions", icon: MessageSquare },
-  { href: "/dashboard/case-studies", label: "Case Studies", icon: Stethoscope },
+  { href: "/dashboard",              label: "Dashboard",      icon: LayoutDashboard },
+  { href: "/dashboard/courses",      label: "My Courses",     icon: BookOpen },
+  { href: "/dashboard/assignments",  label: "Assignments",    icon: FileText },
+  { href: "/dashboard/exams",        label: "Exams & Quizzes", icon: GraduationCap },
+  { href: "/dashboard/discussions",  label: "Discussions",    icon: MessageSquare },
+  { href: "/dashboard/case-studies", label: "Case Studies",   icon: Stethoscope },
   { href: "/dashboard/certifications", label: "Certifications", icon: Award },
   { href: "/dashboard/wellness-units", label: "Wellness Units", icon: Coins },
-  { href: "/dashboard/resources", label: "Resources", icon: Library },
-  { href: "/dashboard/ai-tutor", label: "ANW Scholar", icon: Bot },
-  { href: "/dashboard/profile", label: "My Profile", icon: User },
+  { href: "/dashboard/resources",    label: "Resources",      icon: Library },
+  { href: "/dashboard/ai-tutor",     label: "ANW Scholar",    icon: Bot },
+  { href: "/dashboard/profile",      label: "My Profile",     icon: User },
 ];
+
+// Dark green sidebar palette
+const CREAM       = "#F3ECDA";
+const GOLD        = "#D4A94A";
+const ACTIVE_BG   = "rgba(212,169,74,0.18)";
+const DIVIDER     = "rgba(243,236,218,0.12)";
+const INACTIVE_TX = "rgba(243,236,218,0.75)";
+const INACTIVE_IC = "rgba(243,236,218,0.50)";
+const SIGN_OUT_TX = "rgba(243,236,218,0.55)";
 
 export default function DashboardNav({ onNavClick }: { onNavClick?: () => void }) {
   const pathname = usePathname();
 
   return (
     <nav className="flex flex-col h-full">
-      <div className="px-4 py-4 border-b border-[#e2ddd5]">
-        <Link href="/" onClick={onNavClick} className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-[#4a7c59] flex items-center justify-center text-white text-xs font-bold font-playfair">
+
+      {/* Logo */}
+      <div className="px-4 py-4 flex-shrink-0" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+        <Link href="/" onClick={onNavClick} className="flex items-center gap-2.5">
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold font-playfair flex-shrink-0"
+            style={{ backgroundColor: GOLD, color: "#1C3327" }}
+          >
             ANW
           </div>
-          <span className="font-playfair font-semibold text-[#1a1a1a] text-sm">
-            The Academy of Natural Wellness
+          <span className="font-playfair font-semibold text-sm leading-tight" style={{ color: CREAM }}>
+            Academy of Natural Wellness
           </span>
         </Link>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-4 px-3">
+      {/* Nav items */}
+      <div className="flex-1 overflow-y-auto py-3 px-2.5">
         <ul className="space-y-0.5">
           {navItems.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+            const active =
+              pathname === href ||
+              (href !== "/dashboard" && pathname.startsWith(href));
+
             return (
               <li key={href}>
                 <Link
                   href={href}
                   onClick={onNavClick}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                    active
-                      ? "bg-[#4a7c59] text-white"
-                      : "text-[#6b6459] hover:bg-[#f5f1ea] hover:text-[#1a1a1a]"
-                  )}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all hover:bg-[#F3ECDA]/[0.07]"
+                  style={active ? { backgroundColor: ACTIVE_BG } : undefined}
                 >
-                  <Icon size={16} className="flex-shrink-0" />
-                  {label}
+                  <Icon
+                    size={16}
+                    className="flex-shrink-0"
+                    style={{ color: active ? GOLD : INACTIVE_IC }}
+                  />
+                  <span style={{ color: active ? CREAM : INACTIVE_TX }}>
+                    {label}
+                  </span>
                 </Link>
               </li>
             );
@@ -73,16 +92,18 @@ export default function DashboardNav({ onNavClick }: { onNavClick?: () => void }
         </ul>
       </div>
 
-      <div className="p-3 border-t border-[#e2ddd5]">
+      {/* Sign out */}
+      <div className="px-2.5 py-3 flex-shrink-0" style={{ borderTop: `1px solid ${DIVIDER}` }}>
         <Link
           href="/login"
           onClick={onNavClick}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#6b6459] hover:bg-[#f5f1ea] hover:text-red-600 transition-all w-full"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all hover:bg-[#F3ECDA]/[0.07] w-full"
         >
-          <LogOut size={16} />
-          Sign Out
+          <LogOut size={16} className="flex-shrink-0" style={{ color: SIGN_OUT_TX }} />
+          <span style={{ color: SIGN_OUT_TX }}>Sign Out</span>
         </Link>
       </div>
+
     </nav>
   );
 }

@@ -5,61 +5,83 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
-  School,
   BookOpen,
   Award,
-  Stethoscope,
+  MessageSquare,
   BarChart3,
-  FileText,
+  Inbox,
   LogOut,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/admin", label: "Overview", icon: LayoutDashboard },
-  { href: "/admin/applications", label: "Applications", icon: FileText },
-  { href: "/admin/students", label: "Students", icon: Users },
-  { href: "/admin/schools", label: "Schools", icon: School },
-  { href: "/admin/courses", label: "Courses", icon: BookOpen },
+  { href: "/admin",             label: "Overview",    icon: LayoutDashboard },
+  { href: "/admin/students",    label: "Students",    icon: Users },
+  { href: "/admin/content",     label: "Content",     icon: BookOpen },
+  { href: "/admin/discussions", label: "Discussions", icon: MessageSquare },
+  { href: "/admin/support",     label: "Support",     icon: Inbox },
+  { href: "/admin/analytics",   label: "Analytics",   icon: BarChart3 },
   { href: "/admin/certifications", label: "Certifications", icon: Award },
-  { href: "/admin/case-studies", label: "Case Studies", icon: Stethoscope },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
 ];
+
+const FOREST  = "#1C3327";
+const CREAM   = "#F3ECDA";
+const GOLD    = "#D4A94A";
+const DIVIDER = "rgba(243,236,218,0.12)";
+const MUTED   = "rgba(243,236,218,0.55)";
 
 export default function AdminNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col h-full">
-      <div className="px-4 py-4 border-b border-[#e2ddd5]">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-[#2d5240] flex items-center justify-center text-white text-xs font-bold font-playfair">
+    <nav className="flex flex-col h-full" style={{ backgroundColor: FOREST }}>
+
+      {/* Wordmark */}
+      <div className="px-4 py-4 flex-shrink-0" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold font-playfair flex-shrink-0"
+            style={{ backgroundColor: GOLD, color: FOREST }}
+          >
             ANW
           </div>
           <div>
-            <p className="font-playfair font-semibold text-[#1a1a1a] text-sm">ANW Admin</p>
-            <p className="text-xs text-[#6b6459]">Control Panel</p>
+            <p className="font-playfair font-semibold text-[13px] leading-none" style={{ color: CREAM }}>
+              Academy of Natural Wellness
+            </p>
+            <div className="flex items-center gap-1 mt-1">
+              <Shield size={9} style={{ color: GOLD }} />
+              <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: GOLD }}>
+                Admin
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-4 px-3">
+      {/* Nav items */}
+      <div className="flex-1 overflow-y-auto py-3 px-2.5">
         <ul className="space-y-0.5">
           {navItems.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href || (href !== "/admin" && pathname.startsWith(href));
+            const active =
+              pathname === href ||
+              (href !== "/admin" && pathname.startsWith(href));
             return (
               <li key={href}>
                 <Link
                   href={href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                    active
-                      ? "bg-[#2d5240] text-white"
-                      : "text-[#6b6459] hover:bg-[#f5f1ea] hover:text-[#1a1a1a]"
-                  )}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all hover:bg-[#F3ECDA]/[0.07]"
+                  style={active ? { backgroundColor: "rgba(212,169,74,0.18)" } : undefined}
                 >
-                  <Icon size={16} />
-                  {label}
+                  <Icon
+                    size={16}
+                    className="flex-shrink-0"
+                    style={{ color: active ? GOLD : "rgba(243,236,218,0.50)" }}
+                  />
+                  <span style={{ color: active ? CREAM : "rgba(243,236,218,0.75)" }}>
+                    {label}
+                  </span>
                 </Link>
               </li>
             );
@@ -67,13 +89,21 @@ export default function AdminNav() {
         </ul>
       </div>
 
-      <div className="p-3 border-t border-[#e2ddd5]">
+      {/* Student dashboard link + sign out */}
+      <div className="px-2.5 py-3 flex-shrink-0 space-y-0.5" style={{ borderTop: `1px solid ${DIVIDER}` }}>
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all hover:bg-[#F3ECDA]/[0.07] w-full"
+        >
+          <LayoutDashboard size={16} className="flex-shrink-0" style={{ color: MUTED }} />
+          <span style={{ color: MUTED }}>Student View</span>
+        </Link>
         <Link
           href="/login"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#6b6459] hover:bg-[#f5f1ea] hover:text-red-600 transition-all w-full"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all hover:bg-[#F3ECDA]/[0.07] w-full"
         >
-          <LogOut size={16} />
-          Sign Out
+          <LogOut size={16} className="flex-shrink-0" style={{ color: MUTED }} />
+          <span style={{ color: MUTED }}>Sign Out</span>
         </Link>
       </div>
     </nav>

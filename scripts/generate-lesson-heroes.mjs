@@ -112,15 +112,10 @@ async function main() {
       select: { id: true, title: true, heroImageUrl: true },
     });
   } else {
-    // Default: first 6 lessons of Introduction to Herbal Medicine
+    // Default: all lessons that don't have a hero image yet
     lessons = await prisma.lesson.findMany({
-      where: {
-        module: {
-          course: { slug: "introduction-to-herbal-medicine" },
-        },
-      },
+      where: { heroImageUrl: null },
       orderBy: { order: "asc" },
-      take: 6,
       select: { id: true, title: true, heroImageUrl: true },
     });
   }
