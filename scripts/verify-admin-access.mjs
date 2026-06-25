@@ -48,15 +48,84 @@ function fail(label, detail) {
   console.log("\n  Test 2: Student account blocked from /admin\n");
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+
+    // Intercept the /admin request to capture the raw HTTP response
+    const adminResponses = [];
+    page.on("response", (resp) => {
+      if (resp.url().includes("/admin") && !resp.url().includes("_next")) {
+        adminResponses.push({ url: resp.url(), status: resp.status(), location: resp.headers()["location"] });
+      }
+    });
+
     await page.goto(`${BASE}/login`, { waitUntil: "networkidle", timeout: 20000 });
     await page.fill('input[type="email"]', STUDENT_EMAIL);
     await page.fill('input[type="password"]', STUDENT_PASS);
     await page.click('button[type="submit"]');
-    await page.waitForURL(`${BASE}/dashboard**`, { timeout: 20000 }).catch(() => {});
+    const waitResult = await page.waitForURL(`${BASE}/dashboard**`, { timeout: 20000 }).then(() => "reached").catch(() => "timeout");
+    const urlAfterLogin = page.url();
+    console.log(`  Debug — waitForURL result: ${waitResult}`);
+    console.log(`  Debug — URL after login: ${urlAfterLogin}`);
+
+    // Check role from the server using student's cookies
+    const roleCheck = await page.evaluate(() =>
+      fetch("/api/auth/role").then((r) => r.json()).catch(() => ({ error: "fetch failed" }))
+    );
+    console.log(`  Debug — /api/auth/role for student: ${JSON.stringify(roleCheck)}`);
+
+    // Raw HTTP check: get student's cookies and fetch /admin with redirect:manual
+    const cookies = await page.context().cookies();
+    console.log(`  Debug — All cookies in context: ${JSON.stringify(cookies.map(c => ({ domain: c.domain, name: c.name })))}`);
+    const cookieHeader = cookies
+      .map((c) => `${c.name}=${c.value}`)
+      .join("; ");
+    const rawResp = await fetch(`${BASE}/admin`, {
+      headers: { cookie: cookieHeader },
+      redirect: "manual",
+    });
+    const vercelCache = rawResp.headers.get("x-vercel-cache");
+    const contentType = rawResp.headers.get("content-type");
+    console.log(`  Debug — Raw HTTP /admin → status: ${rawResp.status}, location: ${rawResp.headers.get("location")}, x-vercel-cache: ${vercelCache}, content-type: ${contentType?.slice(0,40)}`);
+    // Decode the Supabase auth token to see whose email is in the JWT
+    const authCookie = cookies.find(c => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
+    if (authCookie) {
+      try {
+        // Supabase cookie value is URL-encoded JSON with access_token
+        const decoded = JSON.parse(decodeURIComponent(authCookie.value));
+        const accessToken = decoded.access_token || decoded;
+        if (typeof accessToken === "string") {
+          const [, jwtPayload] = accessToken.split(".");
+          const jwtDecoded = JSON.parse(Buffer.from(jwtPayload, "base64url").toString());
+          console.log(`  Debug — JWT email: ${jwtDecoded.email}, sub: ${jwtDecoded.sub}`);
+        } else {
+          console.log(`  Debug — Cookie value (first 200): ${authCookie.value.slice(0, 200)}`);
+        }
+      } catch (e) {
+        console.log(`  Debug — Cookie value (first 200): ${authCookie.value.slice(0, 200)}`);
+      }
+    } else {
+      console.log(`  Debug — No Supabase auth cookie found. Cookie names: ${cookies.map(c=>c.name).join(", ")}`);
+    }
+
+    // Capture ALL responses (not just /admin) during the goto
+    const allResponses = [];
+    const allHandler = (resp) => {
+      const u = resp.url();
+      if (!u.includes("_next/static") && !u.includes("_next/image") && !u.includes(".js") && !u.includes(".css")) {
+        allResponses.push({ url: u.replace(BASE, ""), status: resp.status() });
+      }
+    };
+    page.on("response", allHandler);
 
     // Now try to go to /admin
     await page.goto(`${BASE}/admin`, { waitUntil: "networkidle", timeout: 20000 });
+    page.off("response", allHandler);
     const url = page.url();
+    const bodySnippet = await page.evaluate(() => document.body.innerText.slice(0, 300)).catch(() => "");
+    console.log(`  Debug — URL after goto /admin: ${url}`);
+    console.log(`  Debug — Body snippet: "${bodySnippet.slice(0, 150)}"`);
+    console.log(`  Debug — All responses during goto /admin:`);
+    allResponses.filter(r => r.url.startsWith("/admin") || r.url.startsWith("/login") || r.url.startsWith("/dashboard") || r.url.startsWith("/api")).forEach(r => console.log(`    ${r.status} ${r.url}`));
+    console.log(`  Debug — /admin responses captured: ${JSON.stringify(adminResponses)}`);
     if (!url.includes("/admin")) {
       pass(`Student /admin → blocked (redirected to ${url.split("/").pop()})`, url);
     } else {
