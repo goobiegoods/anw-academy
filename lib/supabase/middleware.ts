@@ -41,6 +41,13 @@ export async function updateSession(request: NextRequest) {
         url.pathname = "/login";
         return NextResponse.redirect(url);
       }
+      // Prevent Vercel's edge CDN from caching admin responses
+      supabaseResponse.headers.set(
+        "Cache-Control",
+        "no-store, no-cache, must-revalidate, max-age=0, private"
+      );
+      supabaseResponse.headers.set("CDN-Cache-Control", "no-store");
+      supabaseResponse.headers.set("Vercel-CDN-Cache-Control", "no-store");
       return supabaseResponse;
     }
 
