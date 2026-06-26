@@ -50,7 +50,7 @@ async function loginAs(page, email, password) {
     await loginAs(page, ADMIN_EMAIL, ADMIN_PASS);
     await page.waitForURL(`${BASE}/admin**`, { timeout: 20000 }).catch(() => {});
     const result = await page.evaluate(() =>
-      fetch("/api/admin/revalidate", { method: "POST" })
+      fetch("/api/purge", { method: "POST" })
         .then((r) => r.json())
         .catch((e) => ({ error: String(e) }))
     );
