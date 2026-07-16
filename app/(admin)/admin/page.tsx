@@ -34,14 +34,14 @@ export default async function AdminOverviewPage() {
   await requireAdmin();
 
   const oneWeekAgo = new Date(Date.now() - 7 * 86400000);
+  const twoWeeksAgo = new Date(Date.now() - 14 * 86400000);
 
   const [
     totalStudents,
-    totalEnrollments,
-    totalLessonsCompleted,
-    totalExamsPassed,
+    activeProgressUsers,
     totalCertsAwarded,
     wuAggregate,
+    applicationsPending,
     signupsThisWeek,
     recentTransactions,
     recentSignups,
@@ -50,11 +50,14 @@ export default async function AdminOverviewPage() {
     pendingCaseStudies,
   ] = await Promise.all([
     prisma.user.count({ where: { role: "STUDENT" } }),
-    prisma.enrollment.count(),
-    prisma.lessonProgress.count({ where: { completed: true } }),
-    prisma.quizAttempt.count({ where: { passed: true } }),
+    prisma.lessonProgress.findMany({
+      where: { completedAt: { gte: twoWeeksAgo } },
+      select: { userId: true },
+      distinct: ["userId"],
+    }),
     prisma.studentCertification.count({ where: { status: "awarded" } }),
-    prisma.studentProfile.aggregate({ _avg: { totalWU: true } }),
+    prisma.studentProfile.aggregate({ _sum: { totalWU: true } }),
+    prisma.application.count({ where: { status: { in: ["SUBMITTED", "UNDER_REVIEW"] } } }),
     prisma.user.count({ where: { role: "STUDENT", createdAt: { gte: oneWeekAgo } } }),
     prisma.wellnessUnitTransaction.findMany({
       take: 30,
@@ -78,7 +81,9 @@ export default async function AdminOverviewPage() {
     prisma.caseStudy.count({ where: { status: "submitted" } }),
   ]);
 
-  const avgWU = Math.round(wuAggregate._avg.totalWU ?? 0);
+  const activeStudents = activeProgressUsers.length;
+  const atRiskStudents = Math.max(0, totalStudents - activeStudents);
+  const totalWUAwarded = wuAggregate._sum.totalWU ?? 0;
 
   // School enrollment totals
   const schoolEnrollments = schools
@@ -122,12 +127,12 @@ export default async function AdminOverviewPage() {
     .slice(0, 25);
 
   const stats = [
-    { label: "Total Students",       value: totalStudents,          icon: Users,         color: "#4a7c59" },
-    { label: "Total Enrollments",     value: totalEnrollments,       icon: BookOpen,      color: "#2c6e8a" },
-    { label: "Lessons Completed",     value: totalLessonsCompleted,  icon: CheckCircle2,  color: "#4a7c59" },
-    { label: "Exams Passed",          value: totalExamsPassed,       icon: Award,         color: "#c9923a" },
-    { label: "Certifications",        value: totalCertsAwarded,      icon: GraduationCap, color: "#5b4fcf" },
-    { label: "Avg WU / Student",      value: `${avgWU} WU`,          icon: Coins,         color: "#D4A94A" },
+    { label: "Total Students",        value: totalStudents,          icon: Users,         color: "#4a7c59" },
+    { label: "Active Students (14d)", value: activeStudents,         icon: CheckCircle2,  color: "#2c6e8a" },
+    { label: "Total WU Awarded",      value: `${totalWUAwarded.toLocaleString()} WU`, icon: Coins, color: "#D4A94A" },
+    { label: "Certifications Issued", value: totalCertsAwarded,      icon: GraduationCap, color: "#5b4fcf" },
+    { label: "Applications Pending",  value: applicationsPending,    icon: FileText,      color: "#c9923a" },
+    { label: "At-Risk Students",      value: atRiskStudents,         icon: Award,         color: "#9b4444" },
   ];
 
   const dateStr = new Date().toLocaleDateString("en-US", {
