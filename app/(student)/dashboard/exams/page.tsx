@@ -50,7 +50,7 @@ export default async function ExamsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Exams & Quizzes</h1>
+        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Assessments</h1>
         <p className="text-[#6b6459] mt-1">Test your knowledge and earn Wellness Units</p>
       </div>
 

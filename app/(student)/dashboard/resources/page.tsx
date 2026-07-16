@@ -35,7 +35,7 @@ export default function ResourcesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Resources</h1>
+        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Library</h1>
         <p className="text-[#6b6459] mt-1">Reference materials, guides, and supplementary learning</p>
       </div>
 

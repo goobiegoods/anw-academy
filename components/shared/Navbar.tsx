@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import AcademySeal from "@/components/ui/academy-seal";
 
 const navLinks = [
   { href: "/schools", label: "Schools" },
-  { href: "/programs", label: "Programs" },
-  { href: "/admissions", label: "Admissions" },
-  { href: "/practitioner-network", label: "Practitioners" },
-  { href: "/about", label: "About" },
+  { href: "/faculty", label: "Faculty & Practitioners" },
+  { href: "/academic-calendar", label: "Academic Calendar" },
+  { href: "/about", label: "The Institution" },
 ];
 
 export default function Navbar() {
@@ -18,13 +18,19 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-[#faf8f4] border-b border-[#e2ddd5]">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex items-center justify-between h-14">
+        <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#4a7c59] flex items-center justify-center text-white font-bold font-playfair flex-shrink-0" style={{ fontSize: "9px", letterSpacing: "0.05em" }}>
-              ANW
-            </div>
-            <span className="font-playfair font-semibold text-[#1a1a1a] text-sm hidden sm:block leading-tight">
-              The Academy of Natural Wellness
+            <AcademySeal size="sm" variant="gold" />
+            <span className="hidden sm:block leading-tight">
+              <span className="block font-playfair font-semibold text-[#1a1a1a] text-sm leading-tight">
+                The Academy of Natural Wellness
+              </span>
+              <span
+                className="block font-playfair italic text-[#8a7a6a]"
+                style={{ fontSize: "8.5px", letterSpacing: "0.14em" }}
+              >
+                Natura Sanat, Sapientia Docet
+              </span>
             </span>
           </Link>
 
@@ -45,13 +51,13 @@ export default function Navbar() {
               href="/login"
               className="text-xs font-medium text-[#4a7c59] border border-[#4a7c59]/40 px-4 py-1.5 rounded-full hover:bg-[#4a7c59]/5 transition-colors"
             >
-              Login
+              Student Login
             </Link>
             <Link
               href="/admissions"
               className="bg-[#4a7c59] text-white text-xs font-medium px-4 py-1.5 rounded-full hover:bg-[#2d5240] transition-colors"
             >
-              Apply Now
+              Apply for Admission
             </Link>
           </div>
 
@@ -78,14 +84,14 @@ export default function Navbar() {
           ))}
           <div className="pt-2 flex flex-col gap-2">
             <Link href="/login" className="text-sm font-medium text-[#4a7c59] py-2">
-              Login
+              Student Login
             </Link>
             <Link
               href="/admissions"
               className="bg-[#4a7c59] text-white text-sm font-medium px-4 py-2 rounded-lg text-center"
               onClick={() => setOpen(false)}
             >
-              Apply Now
+              Apply for Admission
             </Link>
           </div>
         </div>

@@ -155,7 +155,7 @@ export default function ApplicationsClient({ applications: initial }: { applicat
               ["Pathway", selected.pathway],
               ["Experience", selected.experience],
               selected.phone ? ["Phone", selected.phone] : null,
-            ].filter(Boolean).map(([label, val]) => (
+            ].filter((row): row is string[] => row !== null).map(([label, val]) => (
               <div key={label} className="flex gap-3">
                 <span className="text-[#6b6459] w-28 flex-shrink-0">{label}</span>
                 <span className="font-medium text-[#1a1a1a]">{val}</span>

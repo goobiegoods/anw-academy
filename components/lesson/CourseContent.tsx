@@ -59,7 +59,7 @@ export default function CourseContent({ course, completedLessonIds }: CourseCont
         style={{ background: `linear-gradient(130deg, ${color} 0%, ${color}cc 100%)` }}
       >
         <p className="text-[10px] uppercase tracking-[0.25em] font-bold text-white/60 mb-2">
-          {course.school.name} · Level {course.level}
+          {course.school.name} · Academic Level {course.level}
         </p>
         <h1 className="font-playfair text-3xl md:text-4xl font-bold leading-tight">
           {course.title}
@@ -70,7 +70,7 @@ export default function CourseContent({ course, completedLessonIds }: CourseCont
         <div className="flex flex-wrap items-center gap-6 mt-6">
           <div>
             <p className="font-playfair text-2xl font-bold">{pct}%</p>
-            <p className="text-[9px] uppercase tracking-[0.18em] text-white/60">Complete</p>
+            <p className="text-[9px] uppercase tracking-[0.18em] text-white/60">Academic Progress</p>
           </div>
           <div>
             <p className="font-playfair text-2xl font-bold">
@@ -84,7 +84,7 @@ export default function CourseContent({ course, completedLessonIds }: CourseCont
           </div>
           <div>
             <p className="font-playfair text-2xl font-bold">{course.estimatedHours}h</p>
-            <p className="text-[9px] uppercase tracking-[0.18em] text-white/60">Est. Hours</p>
+            <p className="text-[9px] uppercase tracking-[0.18em] text-white/60">Academic Hours</p>
           </div>
         </div>
         <div className="mt-5 h-1.5 rounded-full bg-white/20 overflow-hidden max-w-md">
@@ -133,10 +133,10 @@ export default function CourseContent({ course, completedLessonIds }: CourseCont
                       </span>
                       <span className="block text-[11px] text-[#9a9088] mt-0.5">
                         {done
-                          ? "Completed — review anytime"
+                          ? "Mastered — review anytime"
                           : unlocked
                           ? `10 cards · ${lesson.wuValue} WU on completion`
-                          : "Locked — complete the previous lesson"}
+                          : "Prerequisite Required — complete the previous lesson"}
                       </span>
                     </span>
                     {!unlocked && <span className="text-[#b3aca0] text-sm">🔒</span>}

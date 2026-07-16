@@ -47,12 +47,12 @@ export default async function CoursesPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">My Courses</h1>
-        <p className="text-[#6b6459] mt-1">Your enrolled courses and progress</p>
+        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Current Studies</h1>
+        <p className="text-[#6b6459] mt-1">Your enrolled curricula and academic progress</p>
       </div>
 
       <section>
-        <h2 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-5">Enrolled Courses</h2>
+        <h2 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-5">Enrolled Curricula</h2>
         {enrollments.length === 0 ? (
           <div className="bg-white border border-[#e2ddd5] rounded-2xl p-8 text-center">
             <p className="text-sm text-[#6b6459]">You are not enrolled in any courses yet.</p>
@@ -73,9 +73,9 @@ export default async function CoursesPage() {
                       </p>
                       <h3 className="font-semibold text-[#1a1a1a] mb-1 leading-snug">{e.course.title}</h3>
                       <div className="flex items-center gap-3 text-xs text-[#6b6459] mb-4">
-                        <span>Level {e.course.level}</span>
+                        <span>Academic Level {e.course.level}</span>
                         <span>·</span>
-                        <span>{e.course.estimatedHours}h</span>
+                        <span>{e.course.estimatedHours} Academic Hours</span>
                       </div>
                       <ProgressBar value={pct} showLabel />
                       <div className="flex items-center justify-between mt-2 text-xs text-[#6b6459]">
@@ -93,7 +93,7 @@ export default async function CoursesPage() {
 
       <section>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="font-playfair text-xl font-bold text-[#1a1a1a]">Available Courses</h2>
+          <h2 className="font-playfair text-xl font-bold text-[#1a1a1a]">Continue Your Studies</h2>
           <Link href="/schools" className="text-sm text-[#4a7c59] font-medium hover:underline">
             Browse all schools →
           </Link>
@@ -111,16 +111,16 @@ export default async function CoursesPage() {
                 </p>
                 <h3 className="font-semibold text-[#1a1a1a] mb-1 leading-snug">{course.title}</h3>
                 <div className="flex items-center gap-3 text-xs text-[#6b6459] mb-4">
-                  <span>Level {course.level}</span>
+                  <span>Academic Level {course.level}</span>
                   <span>·</span>
-                  <span>{course.estimatedHours}h</span>
+                  <span>{course.estimatedHours} Academic Hours</span>
                   <WUBadge value={course.wuValue} size="sm" />
                 </div>
                 <Link
                   href={`/dashboard/courses/${course.slug}`}
                   className="block w-full bg-[#4a7c59] text-white text-sm font-medium py-2 rounded-lg hover:bg-[#2d5240] transition-colors text-center"
                 >
-                  Explore Course
+                  View Curriculum
                 </Link>
               </div>
             </div>

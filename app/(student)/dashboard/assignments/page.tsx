@@ -427,7 +427,7 @@ export default function AssignmentsPage() {
     <div className="space-y-10">
       {/* Page header with segmented progress */}
       <div>
-        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Assignments</h1>
+        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Coursework</h1>
         <p className="text-[#6b6459] text-[14px] mt-1">
           Submit your coursework and collect mentor feedback
         </p>

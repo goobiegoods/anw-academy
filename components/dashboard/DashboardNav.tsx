@@ -14,21 +14,24 @@ import {
   Library,
   Bot,
   User,
+  ScrollText,
   LogOut,
 } from "lucide-react";
+import AcademySeal from "@/components/ui/academy-seal";
 
 const navItems = [
-  { href: "/dashboard",              label: "Dashboard",      icon: LayoutDashboard },
-  { href: "/dashboard/courses",      label: "My Courses",     icon: BookOpen },
-  { href: "/dashboard/assignments",  label: "Assignments",    icon: FileText },
-  { href: "/dashboard/exams",        label: "Exams & Quizzes", icon: GraduationCap },
-  { href: "/dashboard/discussions",  label: "Discussions",    icon: MessageSquare },
+  { href: "/dashboard",              label: "Reading Room",   icon: LayoutDashboard },
+  { href: "/dashboard/courses",      label: "Current Studies", icon: BookOpen },
+  { href: "/dashboard/assignments",  label: "Coursework",     icon: FileText },
+  { href: "/dashboard/exams",        label: "Assessments",    icon: GraduationCap },
+  { href: "/dashboard/discussions",  label: "Academic Forum", icon: MessageSquare },
   { href: "/dashboard/case-studies", label: "Case Studies",   icon: Stethoscope },
   { href: "/dashboard/certifications", label: "Certifications", icon: Award },
   { href: "/dashboard/wellness-units", label: "Wellness Units", icon: Coins },
-  { href: "/dashboard/resources",    label: "Resources",      icon: Library },
-  { href: "/dashboard/ai-tutor",     label: "ANW Scholar",    icon: Bot },
-  { href: "/dashboard/profile",      label: "My Profile",     icon: User },
+  { href: "/dashboard/resources",    label: "Library",        icon: Library },
+  { href: "/dashboard/ai-tutor",     label: "Academy Scholar", icon: Bot },
+  { href: "/dashboard/profile",      label: "Student Record", icon: User },
+  { href: "/dashboard/transcript",   label: "Official Transcript", icon: ScrollText },
 ];
 
 // Dark green sidebar palette
@@ -49,14 +52,17 @@ export default function DashboardNav({ onNavClick }: { onNavClick?: () => void }
       {/* Logo */}
       <div className="px-4 py-4 flex-shrink-0" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
         <Link href="/" onClick={onNavClick} className="flex items-center gap-2.5">
-          <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold font-playfair flex-shrink-0"
-            style={{ backgroundColor: GOLD, color: "#1C3327" }}
-          >
-            ANW
-          </div>
-          <span className="font-playfair font-semibold text-sm leading-tight" style={{ color: CREAM }}>
-            Academy of Natural Wellness
+          <AcademySeal size="sm" variant="dark" />
+          <span className="leading-tight">
+            <span className="block font-playfair font-semibold text-sm leading-tight" style={{ color: CREAM }}>
+              Academy of Natural Wellness
+            </span>
+            <span
+              className="block font-playfair italic"
+              style={{ color: "rgba(212,169,74,0.75)", fontSize: "8.5px", letterSpacing: "0.12em" }}
+            >
+              Natura Sanat, Sapientia Docet
+            </span>
           </span>
         </Link>
       </div>

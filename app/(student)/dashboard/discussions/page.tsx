@@ -35,7 +35,7 @@ export default async function DiscussionsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Discussions</h1>
+        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Academic Forum</h1>
         <p className="text-[#6b6459] mt-1">Share perspectives and learn from your cohort</p>
       </div>
 

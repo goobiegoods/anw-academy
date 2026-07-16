@@ -1,112 +1,54 @@
 import Link from "next/link";
+import AcademySeal from "@/components/ui/academy-seal";
 
-const schools = [
-  { href: "/schools/herbal-medicine", label: "Herbal Medicine" },
-  { href: "/schools/traditional-chinese-medicine", label: "Traditional Chinese Medicine" },
-  { href: "/schools/homeopathic-studies", label: "Homeopathic Studies" },
-  { href: "/schools/functional-wellness", label: "Functional Wellness" },
-  { href: "/schools/practice-building", label: "Practice Building" },
-  { href: "/schools/wellness-entrepreneurship", label: "Wellness Entrepreneurship" },
-];
-
-const platform = [
-  { href: "/programs", label: "Programs" },
-  { href: "/admissions", label: "Admissions" },
-  { href: "/practitioner-network", label: "Practitioner Network" },
-  { href: "/dashboard", label: "Student Portal" },
-];
-
-const about = [
-  { href: "/about", label: "Our Mission" },
-  { href: "/about#faculty", label: "Faculty" },
-  { href: "/about#approach", label: "Our Approach" },
+const footerLinks = [
+  { href: "/schools", label: "Schools" },
+  { href: "/faculty", label: "Faculty & Practitioners" },
+  { href: "/about", label: "The Institution" },
+  { href: "/admissions", label: "Apply for Admission" },
+  { href: "/login", label: "Student Login" },
 ];
 
 export default function Footer() {
   return (
-    <footer className="bg-[#2d5240] py-12 px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          {/* Brand */}
-          <div>
-            <div className="flex items-center gap-2.5 mb-3">
-              <div
-                className="w-8 h-8 rounded-full bg-[#6aab7e] flex items-center justify-center text-white font-bold font-playfair flex-shrink-0"
-                style={{ fontSize: "9px", letterSpacing: "0.05em" }}
-              >
-                ANW
-              </div>
-              <span className="font-playfair font-semibold text-white text-sm leading-tight">
-                The Academy of Natural Wellness
-              </span>
-            </div>
-            <p className="font-playfair italic text-xs text-white/70 leading-relaxed mb-2">
-              Where ancient wisdom meets modern mastery.
-            </p>
-            <p className="text-[11.5px] text-white/55 leading-relaxed">
-              A comprehensive institution for natural wellness education.
-            </p>
-          </div>
+    <footer className="bg-[#1C3327] py-14 px-8">
+      <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
+        <AcademySeal size="sm" variant="light" className="opacity-90" />
 
-          {/* Schools */}
-          <div>
-            <h4 className="text-[9px] font-bold uppercase tracking-widest text-[#c9923a] mb-4">
-              Schools
-            </h4>
-            <ul className="space-y-2">
-              {schools.map((s) => (
-                <li key={s.href}>
-                  <Link href={s.href} className="text-[11.5px] text-white/55 hover:text-white transition-colors">
-                    {s.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <p className="font-playfair font-semibold text-white text-base mt-4">
+          Academy of Natural Wellness{" "}
+          <span className="text-white/40 font-normal">·</span>{" "}
+          <span className="text-[#D4A94A] text-sm tracking-[0.08em]">Est. 2026</span>
+        </p>
 
-          {/* Platform */}
-          <div>
-            <h4 className="text-[9px] font-bold uppercase tracking-widest text-[#c9923a] mb-4">
-              Platform
-            </h4>
-            <ul className="space-y-2">
-              {platform.map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="text-[11.5px] text-white/55 hover:text-white transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <p className="font-playfair italic text-[13px] text-white/60 mt-1.5 tracking-[0.1em]">
+          Natura Sanat, Sapientia Docet
+        </p>
+        <p className="text-[10px] text-white/35 mt-0.5 tracking-[0.06em]">
+          Nature Heals, Wisdom Teaches
+        </p>
 
-          {/* About */}
-          <div>
-            <h4 className="text-[9px] font-bold uppercase tracking-widest text-[#c9923a] mb-4">
-              About
-            </h4>
-            <ul className="space-y-2">
-              {about.map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="text-[11.5px] text-white/55 hover:text-white transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-7">
+          {footerLinks.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="text-[12px] text-white/60 hover:text-white transition-colors"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
 
-        {/* Bottom bar */}
-        <div className="mt-12 pt-6 border-t border-white/10 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <p className="text-[10px] text-white/28 leading-relaxed max-w-2xl">
+        <div className="w-full mt-10 pt-6 border-t border-white/10">
+          <p className="text-[10px] text-white/30 leading-relaxed max-w-2xl mx-auto">
             <strong>Educational Disclaimer:</strong> The Academy of Natural Wellness provides
             educational content for wellness learning only. Our programs are not a substitute for
             professional medical advice, diagnosis, or treatment. Graduates of ANW are wellness
             educators, not licensed medical practitioners.
           </p>
-          <p className="text-[10px] text-white/28 md:text-right shrink-0">
-            © {new Date().getFullYear()} The Academy of Natural Wellness. All rights reserved.
+          <p className="text-[10px] text-white/30 mt-4">
+            © 2026 Academy of Natural Wellness. All rights reserved.
           </p>
         </div>
       </div>

@@ -30,6 +30,7 @@ model User {
   email              String                   @unique
   name               String
   role               Role                     @default(STUDENT)
+  studentId          String?                  @unique
   createdAt          DateTime                 @default(now())
   studentProfile     StudentProfile?
   practitionerProfile PractitionerProfile?
@@ -294,14 +295,38 @@ model Certification {
 }
 
 model StudentCertification {
-  id              String        @id @default(uuid())
-  userId          String
-  user            User          @relation(fields: [userId], references: [id])
-  certificationId String
-  certification   Certification @relation(fields: [certificationId], references: [id])
-  status          String        @default("in_progress")
-  progressPercent Int           @default(0)
-  awardedAt       DateTime?
+  id                String        @id @default(uuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id])
+  certificationId   String
+  certification     Certification @relation(fields: [certificationId], references: [id])
+  status            String        @default("in_progress")
+  progressPercent   Int           @default(0)
+  certificateNumber String?       @unique
+  awardedAt         DateTime?
+
+  @@index([certificateNumber])
+}
+
+model Faculty {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  name            String
+  title           String
+  bio             String
+  credentials     String[]
+  specializations String[]
+  schools         String[]
+  photoUrl        String?
+  email           String?
+  linkedinUrl     String?
+  personalWebsite String?
+  isActive        Boolean  @default(true)
+  isFounding      Boolean  @default(false)
+  coursesTaught   String[]
+  joinedAt        DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Capstone {

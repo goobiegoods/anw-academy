@@ -122,7 +122,7 @@ export default function AITutor({ schools }: { schools: SchoolOption[] }) {
             <span className="text-[#e8b45a] font-playfair font-bold text-sm">A</span>
           </div>
           <div>
-            <h1 className="font-playfair text-2xl font-bold text-[#1a1a1a]">The ANW Scholar</h1>
+            <h1 className="font-playfair text-2xl font-bold text-[#1a1a1a]">The Academy Scholar</h1>
             <p className="text-[12px] text-[#6b6459]">
               Your intelligent wellness learning companion — drawing from the full depth of the ANW
               curriculum.
