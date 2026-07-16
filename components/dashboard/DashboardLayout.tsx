@@ -13,10 +13,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-[#faf8f4] overflow-hidden">
+    <div className="flex h-screen bg-[#faf8f4] overflow-hidden print:h-auto print:overflow-visible print:block">
 
       {/* Mobile header — white top bar, only visible on small screens */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-[#e2ddd5] flex items-center px-4 gap-3 flex-shrink-0">
+      <header className="lg:hidden print:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-[#e2ddd5] flex items-center px-4 gap-3 flex-shrink-0">
         <button
           onClick={() => setMobileOpen(true)}
           className="p-1.5 rounded-lg text-[#6b6459] hover:bg-[#f5f1ea] transition-colors flex-shrink-0"
@@ -60,15 +60,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Desktop sidebar */}
       <aside
-        className="hidden lg:flex w-64 flex-shrink-0 flex-col"
+        className="hidden lg:flex print:!hidden w-64 flex-shrink-0 flex-col"
         style={{ backgroundColor: SIDEBAR_BG }}
       >
         <DashboardNav />
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto pt-14 lg:pt-0">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+      <main className="flex-1 overflow-y-auto pt-14 lg:pt-0 print:pt-0 print:overflow-visible">
+        <div className="max-w-6xl mx-auto px-6 py-8 print:p-0 print:max-w-none">
           {children}
         </div>
       </main>
