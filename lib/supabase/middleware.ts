@@ -1,7 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-
-const ADMIN_EMAIL = "orel.shemen@gmail.com";
+import { isAdminEmail } from "@/lib/admin-emails";
 
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -34,11 +33,17 @@ export async function updateSession(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Admin routes: require login AND the exact admin email
+    // Admin routes: require login AND an allowlisted admin email.
+    // Logged-in non-admins are silently sent to their dashboard.
     if (pathname.startsWith("/admin")) {
-      if (!user || user.email !== ADMIN_EMAIL) {
+      if (!user) {
         const url = request.nextUrl.clone();
         url.pathname = "/login";
+        return NextResponse.redirect(url);
+      }
+      if (!isAdminEmail(user.email)) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/dashboard";
         return NextResponse.redirect(url);
       }
       // Prevent Vercel's edge CDN from caching admin responses

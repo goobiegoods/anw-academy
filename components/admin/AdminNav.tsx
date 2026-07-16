@@ -9,6 +9,7 @@ import {
   Award,
   MessageSquare,
   BarChart3,
+  GraduationCap,
   Inbox,
   LogOut,
   Shield,
@@ -23,6 +24,7 @@ const navItems = [
   { href: "/admin/support",     label: "Support",     icon: Inbox },
   { href: "/admin/analytics",   label: "Analytics",   icon: BarChart3 },
   { href: "/admin/certifications", label: "Certifications", icon: Award },
+  { href: "/admin/faculty",     label: "Faculty",     icon: GraduationCap },
 ];
 
 const FOREST  = "#1C3327";

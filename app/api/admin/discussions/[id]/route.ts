@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
-import { ADMIN_EMAIL } from "@/lib/admin";
+import { isAdminEmail } from "@/lib/admin-emails";
 
 export async function DELETE(
   _req: Request,
@@ -12,7 +12,7 @@ export async function DELETE(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user || user.email !== ADMIN_EMAIL) {
+  if (!user || !isAdminEmail(user.email)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

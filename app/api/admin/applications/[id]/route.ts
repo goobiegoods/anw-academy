@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
-const ADMIN_EMAIL = "orel.shemen@gmail.com";
+import { isAdminEmail } from "@/lib/admin-emails";
 
 export async function PATCH(
   req: Request,
@@ -10,7 +10,7 @@ export async function PATCH(
 ) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email !== ADMIN_EMAIL) {
+  if (!user || !isAdminEmail(user.email)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

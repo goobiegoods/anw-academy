@@ -37,6 +37,17 @@ export default async function CourseDetailPage({
       })
     : [];
 
+  // "Taught By" — prefer explicit course assignment, fall back to school faculty
+  const facultyMatches = await prisma.faculty.findMany({
+    where: {
+      isActive: true,
+      OR: [{ coursesTaught: { has: course.slug } }, { schools: { has: course.school.name } }],
+    },
+    orderBy: [{ isFounding: "desc" }, { joinedAt: "asc" }],
+  });
+  const instructor =
+    facultyMatches.find((f) => f.coursesTaught.includes(course.slug)) ?? facultyMatches[0] ?? null;
+
   const completedLessonIds = progress
     .filter((p) => p.completed)
     .map((p) => p.lessonId);
@@ -80,6 +91,16 @@ export default async function CourseDetailPage({
         })),
       }}
       completedLessonIds={completedLessonIds}
+      taughtBy={
+        instructor
+          ? {
+              name: instructor.name,
+              title: instructor.title,
+              slug: instructor.slug,
+              photoUrl: instructor.photoUrl,
+            }
+          : null
+      }
     />
   );
 }

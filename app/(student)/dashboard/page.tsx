@@ -76,6 +76,23 @@ export default async function ReadingRoomPage() {
     }),
   ]);
 
+  const enrolledSlugs = enrollments.map((e) => e.course.slug);
+  const enrolledSchoolNames = [...new Set(enrollments.map((e) => e.course.school.name))];
+  const instructors =
+    enrollments.length > 0
+      ? await prisma.faculty.findMany({
+          where: {
+            isActive: true,
+            OR: [
+              { coursesTaught: { hasSome: enrolledSlugs } },
+              { schools: { hasSome: enrolledSchoolNames } },
+            ],
+          },
+          orderBy: [{ isFounding: "desc" }, { joinedAt: "asc" }],
+          take: 6,
+        })
+      : [];
+
   const completedSet = new Set(completedProgress.map((p) => p.lessonId));
   const completedAtByLesson = new Map(
     completedProgress.map((p) => [p.lessonId, p.completedAt] as const)
@@ -266,6 +283,48 @@ export default async function ReadingRoomPage() {
           ))}
         </div>
       </div>
+
+      {/* ── Your Instructors ────────────────────────────────────────────── */}
+      {instructors.length > 0 && (
+        <div>
+          <h2 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-4">Your Instructors</h2>
+          <div className="flex flex-wrap gap-4">
+            {instructors.map((f) => (
+              <Link key={f.id} href={`/faculty/${f.slug}`}>
+                <div className="bg-white border border-[#e2ddd5] rounded-2xl px-5 py-3.5 flex items-center gap-3 hover:shadow-[0_4px_12px_rgba(0,0,0,0.07)] transition-all">
+                  {f.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={f.photoUrl}
+                      alt={f.name}
+                      className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                      style={{ border: `2px solid ${GOLD}` }}
+                    />
+                  ) : (
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: FOREST, border: `2px solid ${GOLD}` }}
+                    >
+                      <span className="font-playfair font-bold text-[12px]" style={{ color: GOLD }}>
+                        {f.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-[13px] font-semibold text-[#1a1a1a] leading-tight">{f.name}</p>
+                    <p className="text-[11px] text-[#8a7a6a] italic">{f.title}</p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── 6. Academy Scholar ──────────────────────────────────────────── */}
       <Link href="/dashboard/ai-tutor">

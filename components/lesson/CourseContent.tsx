@@ -30,9 +30,15 @@ type CourseContentProps = {
     exams: { id: string; title: string; type: string; wuValue: number }[];
   };
   completedLessonIds: string[];
+  taughtBy?: {
+    name: string;
+    title: string;
+    slug: string;
+    photoUrl: string | null;
+  } | null;
 };
 
-export default function CourseContent({ course, completedLessonIds }: CourseContentProps) {
+export default function CourseContent({ course, completedLessonIds, taughtBy }: CourseContentProps) {
   const [completed] = useState(new Set(completedLessonIds));
   const color = course.school.color;
 
@@ -91,6 +97,49 @@ export default function CourseContent({ course, completedLessonIds }: CourseCont
           <div className="h-full bg-[#e8b45a] rounded-full transition-all" style={{ width: `${pct}%` }} />
         </div>
       </div>
+
+      {/* Taught By */}
+      {taughtBy && (
+        <Link href={`/faculty/${taughtBy.slug}`}>
+          <div className="bg-white border border-[#e2ddd5] rounded-2xl px-6 py-4 flex items-center gap-4 hover:shadow-[0_4px_12px_rgba(0,0,0,0.07)] transition-all">
+            {taughtBy.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={taughtBy.photoUrl}
+                alt={taughtBy.name}
+                className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                style={{ border: "2px solid #D4A94A" }}
+              />
+            ) : (
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: "#1C3327", border: "2px solid #D4A94A" }}
+              >
+                <span className="font-playfair font-bold text-[14px]" style={{ color: "#D4A94A" }}>
+                  {taughtBy.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2)}
+                </span>
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#c9923a] mb-0.5">
+                Taught By
+              </p>
+              <p className="font-playfair font-bold text-[15px] text-[#1a1a1a] leading-snug">
+                {taughtBy.name}
+              </p>
+              <p className="text-[12px] text-[#6b6459] italic">{taughtBy.title}</p>
+            </div>
+            <span className="text-[12px] font-semibold text-[#4a7c59] flex-shrink-0">
+              View Profile →
+            </span>
+          </div>
+        </Link>
+      )}
 
       {/* Modules */}
       {course.modules.map((module, mi) => {
