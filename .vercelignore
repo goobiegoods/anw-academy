@@ -1,0 +1,6 @@
+# Local-only files that must never be uploaded to Vercel (root-level only)
+/*.png
+/*.mhtml
+/Belly app launch strategy tonight - Claude.html
+/Belly app launch strategy tonight - Claude_files
+/CUsers18185AppDataLocalTempnextdev.log
