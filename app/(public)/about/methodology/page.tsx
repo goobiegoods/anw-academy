@@ -8,6 +8,39 @@ export const metadata = {
 const FOREST = "#1C3327";
 const GOLD = "#D4A94A";
 
+const EVIDENCE_LEVELS = [
+  {
+    label: "Established science",
+    color: "#2D6A4F",
+    description: "Supported by strong scientific consensus or replicated, high-quality evidence.",
+    example: "Core anatomy, physiology, and well-established safety guidance.",
+  },
+  {
+    label: "Evidence-informed practice",
+    color: "#3B6F8F",
+    description: "Supported by meaningful evidence, with limits that depend on context, population, or method.",
+    example: "Promising practices that require calibrated claims and individual judgment.",
+  },
+  {
+    label: "Emerging research",
+    color: "#8A6B30",
+    description: "Actively studied and potentially useful, but not yet settled enough for confident conclusions.",
+    example: "Early findings, plausible mechanisms, and questions still under investigation.",
+  },
+  {
+    label: "Traditional / historical",
+    color: "#76568A",
+    description: "Taught to understand a tradition on its own terms; longevity and cultural importance are not proof of efficacy.",
+    example: "Classical texts, lineage concepts, and historical systems of interpretation.",
+  },
+  {
+    label: "Theoretical / speculative",
+    color: "#8B4A3C",
+    description: "A model or claim with limited direct evidence, presented as a possibility rather than an established fact.",
+    example: "Contested explanations and hypotheses that require explicit uncertainty.",
+  },
+];
+
 const SECTIONS = [
   {
     title: "How ANW Curricula Are Structured",
@@ -63,6 +96,44 @@ export default function MethodologyPage() {
             How the Academy builds curricula, counts credit, and stands behind its diplomas.
           </p>
         </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-6 pt-16">
+        <section aria-labelledby="evidence-standard-title">
+          <div className="max-w-3xl">
+            <span className="block w-8 h-1 rounded-full mb-4" style={{ backgroundColor: GOLD }} />
+            <p className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#8a6b30]">
+              The ANW Evidence Standard
+            </p>
+            <h2 id="evidence-standard-title" className="font-playfair text-3xl font-bold text-[#1a1a1a] mt-2">
+              Learn the claim—and the kind of knowing behind it.
+            </h2>
+            <p className="text-[14px] text-[#4a4238] leading-[1.9] mt-4">
+              Academy 2.0 does not flatten science, tradition, early research, and theory into one voice.
+              We teach each seriously, label it clearly, and show where different frameworks agree,
+              conflict, or remain uncertain.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+            {EVIDENCE_LEVELS.map((level, index) => (
+              <article
+                key={level.label}
+                className={`bg-white rounded-2xl border border-[#e2ddd5] p-6 ${index === EVIDENCE_LEVELS.length - 1 ? "md:col-span-2" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: level.color }} />
+                  <h3 className="font-playfair text-lg font-bold text-[#1a1a1a]">{level.label}</h3>
+                </div>
+                <p className="text-[13px] text-[#4a4238] leading-relaxed mt-3">{level.description}</p>
+                <p className="text-[11.5px] text-[#8a7a6a] leading-relaxed mt-3">
+                  <span className="font-semibold uppercase tracking-[0.08em]">For example:</span>{" "}
+                  {level.example}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
 
       <div className="max-w-3xl mx-auto px-6 py-16 space-y-10">

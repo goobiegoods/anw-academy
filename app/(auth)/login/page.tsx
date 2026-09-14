@@ -98,10 +98,6 @@ export default function LoginPage() {
           </Link>
         </div>
       </div>
-
-      <p className="mt-6 text-center text-xs text-[#6b6459]">
-        For demo: <span className="font-mono text-[#4a7c59]">student@anwacademy.com</span> / <span className="font-mono text-[#4a7c59]">password123</span>
-      </p>
     </div>
   );
 }

@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [confirmationSent, setConfirmationSent] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +18,7 @@ export default function RegisterPage() {
     setError("");
 
     const supabase = createClient();
-    const { error: authError } = await supabase.auth.signUp({
+    const { data, error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: { data: { name: form.name } },
@@ -29,15 +30,27 @@ export default function RegisterPage() {
       return;
     }
 
-    // Create the ANW User record (with a StudentProfile) alongside the auth account
+    if (!data.session) {
+      setConfirmationSent(true);
+      setLoading(false);
+      return;
+    }
+
+    // Create the Academy record only after Supabase has verified the identity.
     try {
-      await fetch("/api/auth/register", {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email, name: form.name }),
       });
+      if (!response.ok) {
+        const result = await response.json().catch(() => null);
+        throw new Error(result?.error || "We could not create your Academy profile.");
+      }
     } catch {
-      // User record creation is retried on first login via role lookup
+      setError("Your sign-in was created, but your Academy profile could not be completed. Please try signing in again or contact support.");
+      setLoading(false);
+      return;
     }
 
     router.push("/dashboard");
@@ -56,6 +69,18 @@ export default function RegisterPage() {
       </div>
 
       <div className="bg-white border border-[#e2ddd5] rounded-[20px] shadow-card p-8">
+        {confirmationSent ? (
+          <div className="text-center" role="status">
+            <p className="font-playfair text-xl font-bold text-[#1a1a1a]">Check your email</p>
+            <p className="text-sm text-[#6b6459] mt-3 leading-relaxed">
+              We sent a confirmation link to <strong>{form.email}</strong>. Your Academy record will be created after you confirm your address.
+            </p>
+            <Link href="/login" className="inline-block mt-6 text-sm font-semibold text-[#4a7c59] hover:underline">
+              Return to sign in
+            </Link>
+          </div>
+        ) : (
+        <>
         <form onSubmit={handleRegister} className="space-y-4">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
@@ -111,6 +136,8 @@ export default function RegisterPage() {
             Sign in
           </Link>
         </div>
+        </>
+        )}
       </div>
     </div>
   );

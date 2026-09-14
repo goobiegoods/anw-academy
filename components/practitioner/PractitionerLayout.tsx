@@ -8,9 +8,9 @@ import {
   UserCircle,
   Library,
   GraduationCap,
-  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import SignOutButton from "@/components/shared/SignOutButton";
 
 const navItems = [
   { href: "/practitioner", label: "Dashboard", icon: LayoutDashboard },
@@ -67,13 +67,9 @@ export default function PractitionerLayout({ children }: PractitionerLayoutProps
         </nav>
 
         <div className="p-3 border-t border-[#e2ddd5]">
-          <Link
-            href="/login"
+          <SignOutButton
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#6b6459] hover:bg-[#f5f1ea] hover:text-red-600 transition-all w-full"
-          >
-            <LogOut size={16} />
-            Sign Out
-          </Link>
+          />
         </div>
       </aside>
 

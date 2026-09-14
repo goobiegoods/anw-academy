@@ -2,8 +2,11 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Resolve the current ANW user. Uses the Supabase session when present;
- * falls back to the demo student so the platform is explorable without login.
+ * Resolve the current ANW user from a verified Supabase identity.
+ *
+ * This deliberately fails closed. A missing session, failed verification, or
+ * auth identity without a matching Academy record must never inherit another
+ * student's identity or academic data.
  */
 export async function getCurrentUser() {
   try {
@@ -12,22 +15,15 @@ export async function getCurrentUser() {
       data: { user: authUser },
     } = await supabase.auth.getUser();
 
-    if (authUser?.email) {
-      const user = await prisma.user.findUnique({
-        where: { email: authUser.email },
-        include: { studentProfile: true, practitionerProfile: true },
-      });
-      if (user) return user;
-    }
-  } catch {
-    // No session — fall through to demo user
-  }
+    if (!authUser?.email) return null;
 
-  return prisma.user.findFirst({
-    where: { role: "STUDENT" },
-    include: { studentProfile: true, practitionerProfile: true },
-    orderBy: { createdAt: "asc" },
-  });
+    return prisma.user.findUnique({
+      where: { email: authUser.email.toLowerCase() },
+      include: { studentProfile: true, practitionerProfile: true },
+    });
+  } catch {
+    return null;
+  }
 }
 
 export async function awardWU(

@@ -130,9 +130,21 @@ export default function AITutor({ schools }: { schools: SchoolOption[] }) {
           </div>
         </div>
 
+        <div className="mt-4 rounded-xl border border-[#d9d1c3] bg-[#f5f1ea] px-4 py-3">
+          <p className="text-[10px] uppercase tracking-[0.16em] font-bold text-[#8a6b30]">
+            Evidence-aware tutoring
+          </p>
+          <p className="text-[11.5px] text-[#6b6459] mt-1 leading-relaxed">
+            The Scholar distinguishes established science, evidence-informed practice, emerging
+            research, traditional or historical frameworks, and theoretical claims. It supports
+            learning—it does not diagnose, prescribe, or replace faculty or licensed care.
+          </p>
+        </div>
+
         {/* Context selectors */}
         <div className="flex flex-col sm:flex-row gap-3 mt-4">
           <select
+            aria-label="School context"
             value={schoolContext}
             onChange={(e) => {
               setSchoolContext(e.target.value);
@@ -146,6 +158,7 @@ export default function AITutor({ schools }: { schools: SchoolOption[] }) {
             ))}
           </select>
           <select
+            aria-label="Course context"
             value={courseContext}
             onChange={(e) => setCourseContext(e.target.value)}
             disabled={!activeSchool}

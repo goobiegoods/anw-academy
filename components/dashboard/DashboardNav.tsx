@@ -15,9 +15,9 @@ import {
   Bot,
   User,
   ScrollText,
-  LogOut,
 } from "lucide-react";
 import AcademySeal from "@/components/ui/academy-seal";
+import SignOutButton from "@/components/shared/SignOutButton";
 
 const navItems = [
   { href: "/dashboard",              label: "Reading Room",   icon: LayoutDashboard },
@@ -100,14 +100,11 @@ export default function DashboardNav({ onNavClick }: { onNavClick?: () => void }
 
       {/* Sign out */}
       <div className="px-2.5 py-3 flex-shrink-0" style={{ borderTop: `1px solid ${DIVIDER}` }}>
-        <Link
-          href="/login"
-          onClick={onNavClick}
+        <SignOutButton
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all hover:bg-[#F3ECDA]/[0.07] w-full"
-        >
-          <LogOut size={16} className="flex-shrink-0" style={{ color: SIGN_OUT_TX }} />
-          <span style={{ color: SIGN_OUT_TX }}>Sign Out</span>
-        </Link>
+          style={{ color: SIGN_OUT_TX }}
+          iconColor={SIGN_OUT_TX}
+        />
       </div>
 
     </nav>
