@@ -16,17 +16,21 @@ import {
   User,
   ScrollText,
   Network,
+  Route,
+  Landmark,
 } from "lucide-react";
 import AcademySeal from "@/components/ui/academy-seal";
 import SignOutButton from "@/components/shared/SignOutButton";
 
 const navItems = [
   { href: "/dashboard",              label: "Reading Room",   icon: LayoutDashboard },
+  { href: "/dashboard/academic-plan", label: "Academic Plan", icon: Route },
   { href: "/dashboard/courses",      label: "Current Studies", icon: BookOpen },
   { href: "/dashboard/atlas",        label: "Human Body Atlas", icon: Network },
   { href: "/dashboard/assignments",  label: "Coursework",     icon: FileText },
   { href: "/dashboard/exams",        label: "Assessments",    icon: GraduationCap },
   { href: "/dashboard/discussions",  label: "Academic Forum", icon: MessageSquare },
+  { href: "/dashboard/student-life", label: "Student Life", icon: Landmark },
   { href: "/dashboard/case-studies", label: "Case Studies",   icon: Stethoscope },
   { href: "/dashboard/certifications", label: "Certifications", icon: Award },
   { href: "/dashboard/wellness-units", label: "Wellness Units", icon: Coins },

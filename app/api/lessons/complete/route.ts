@@ -64,6 +64,19 @@ export async function POST(req: Request) {
   });
   if (!lesson) return NextResponse.json({ error: "Lesson not found." }, { status: 404 });
 
+  const enrollment = await prisma.enrollment.findUnique({
+    where: {
+      userId_courseId: { userId: user.id, courseId: lesson.module.course.id },
+    },
+    select: { status: true },
+  });
+  if (!enrollment || enrollment.status !== "active") {
+    return NextResponse.json(
+      { error: "This lesson is not available in your active studies." },
+      { status: 403 }
+    );
+  }
+
   const orderedLessonIds = lesson.module.course.modules.flatMap((courseModule) =>
     courseModule.lessons.map((courseLesson) => courseLesson.id)
   );

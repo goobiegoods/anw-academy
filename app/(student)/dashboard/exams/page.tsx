@@ -1,28 +1,26 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { getAcademicAccessContext } from "@/lib/academic-access";
 
 export const dynamic = "force-dynamic";
 
 export default async function ExamsPage() {
   const user = await getCurrentUser();
 
-  const enrolledCourseIds = user
-    ? (
-        await prisma.enrollment.findMany({
-          where: { userId: user.id },
-          select: { courseId: true },
-        })
-      ).map((e) => e.courseId)
-    : [];
+  const access = user ? await getAcademicAccessContext(user.id) : null;
+  const enrolledCourseIds = access ? [...access.courseIds] : [];
+  const enrolledSchoolIds = access ? [...access.schoolIds] : [];
 
   const [quizzes, attempts] = await Promise.all([
-    prisma.quiz.findMany({
+    access && (enrolledCourseIds.length > 0 || enrolledSchoolIds.length > 0)
+      ? prisma.quiz.findMany({
       where: {
         type: { in: ["midterm", "final"] },
-        ...(enrolledCourseIds.length
-          ? { OR: [{ courseId: { in: enrolledCourseIds } }, { type: "final" }] }
-          : {}),
+        OR: [
+          { courseId: { in: enrolledCourseIds } },
+          { courseId: null, schoolId: { in: enrolledSchoolIds } },
+        ],
       },
       include: {
         course: { include: { school: true } },
@@ -30,7 +28,8 @@ export default async function ExamsPage() {
       },
       orderBy: { title: "asc" },
       take: 30,
-    }),
+      })
+      : Promise.resolve([]),
     user
       ? prisma.quizAttempt.findMany({
           where: { userId: user.id },

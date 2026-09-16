@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { buildScholarContext } from "@/lib/academics/scholar-context";
 
 export const runtime = "nodejs";
 
@@ -70,14 +71,11 @@ export async function POST(req: Request) {
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const context = [
-    schoolContext ? `The student is currently studying in the ${schoolContext}.` : "",
-    courseContext ? `They are working through the course: ${courseContext}.` : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const system = context ? `${SYSTEM_PROMPT}\n\n${context}` : SYSTEM_PROMPT;
+  const context = await buildScholarContext(user.id, {
+    school: schoolContext || undefined,
+    course: courseContext || undefined,
+  });
+  const system = `${SYSTEM_PROMPT}\n\n${context}`;
 
   const messages: Anthropic.MessageParam[] = [
     ...conversationHistory.map((msg) => ({

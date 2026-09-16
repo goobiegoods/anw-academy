@@ -1,99 +1,20 @@
-"use client";
-
-import { useState } from "react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import StatusBadge from "@/components/shared/StatusBadge";
 
-const caseStudies = [
-  {
-    id: 1,
-    title: "Supporting Seasonal Allergies Naturally",
-    course: "Introduction to Herbal Medicine",
-    status: "approved",
-    wuAwarded: 15,
-    feedback: "Excellent case study. Your safety considerations section was thorough and showed strong awareness of scope of practice. Your herbal recommendations were well-reasoned and historically grounded.",
-    submittedAt: "2 weeks ago",
-  },
-];
+export const dynamic = "force-dynamic";
 
-export default function CaseStudiesPage() {
-  const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({
-    title: "", scenario: "", observations: "", wellnessSupport: "", safetyConsiderations: "", reflection: ""
-  });
-
+export default async function CaseStudiesPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  const cases = await prisma.caseStudy.findMany({ where: { userId: user.id }, orderBy: { submittedAt: "desc" }, include: { course: { select: { title: true } } } });
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Case Studies</h1>
-        <p className="text-[#6b6459] mt-1">Apply your learning to real-world wellness scenarios</p>
-      </div>
-
-      {caseStudies.map((cs) => (
-        <div key={cs.id} className="bg-white border border-[#e2ddd5] rounded-[16px] shadow-card p-6">
-          <div className="flex items-start justify-between flex-wrap gap-3 mb-3">
-            <div>
-              <h2 className="font-playfair text-xl font-bold text-[#1a1a1a]">{cs.title}</h2>
-              <p className="text-sm text-[#6b6459] mt-1">{cs.course} · {cs.submittedAt}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <StatusBadge status={cs.status} />
-              {cs.wuAwarded && (
-                <span className="text-sm font-bold text-[#c9923a]">+{cs.wuAwarded} WU</span>
-              )}
-            </div>
-          </div>
-          {cs.feedback && (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-              <p className="text-xs font-semibold text-green-700 mb-1">Mentor Feedback</p>
-              <p className="text-sm text-green-800">{cs.feedback}</p>
-            </div>
-          )}
-        </div>
-      ))}
-
-      <div className="bg-white border border-[#e2ddd5] rounded-[16px] shadow-card p-6">
-        <h2 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-2">Submit a New Case Study</h2>
-        <p className="text-sm text-[#6b6459] mb-6">Case studies earn 10–25 WU based on depth and quality. All case studies are reviewed by ANW mentors.</p>
-
-        {!submitting ? (
-          <button
-            className="bg-[#4a7c59] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[#2d5240] transition-colors"
-            onClick={() => setSubmitting(true)}
-          >
-            + New Case Study
-          </button>
-        ) : (
-          <div className="space-y-4">
-            {[
-              { key: "title", label: "Case Study Title", placeholder: "e.g., Supporting Seasonal Allergies Naturally" },
-              { key: "scenario", label: "Client Scenario (anonymized)", placeholder: "Describe the situation, background, and wellness concern…" },
-              { key: "observations", label: "Observations & Assessment", placeholder: "What did you observe or learn about the individual's current wellness status?" },
-              { key: "wellnessSupport", label: "Wellness Support Provided", placeholder: "What educational information or wellness lifestyle suggestions did you share?" },
-              { key: "safetyConsiderations", label: "Safety Considerations", placeholder: "What safety boundaries did you maintain? Were any referrals made?" },
-              { key: "reflection", label: "Personal Reflection", placeholder: "What did you learn from this experience? What would you do differently?" },
-            ].map(({ key, label, placeholder }) => (
-              <div key={key}>
-                <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5">{label} *</label>
-                <textarea
-                  rows={key === "title" ? 1 : 4}
-                  value={form[key as keyof typeof form]}
-                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                  className="w-full border border-[#e2ddd5] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#4a7c59] resize-none"
-                  placeholder={placeholder}
-                />
-              </div>
-            ))}
-            <div className="flex gap-3">
-              <button className="bg-[#4a7c59] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[#2d5240]" onClick={() => setSubmitting(false)}>
-                Submit Case Study
-              </button>
-              <button className="border border-[#e2ddd5] text-[#6b6459] px-6 py-3 rounded-xl hover:bg-[#f5f1ea]" onClick={() => setSubmitting(false)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      <header className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8a6b30]">Faculty-reviewed practice</p><h1 className="mt-2 font-playfair text-3xl font-bold text-[#1a1a1a]">Case Studies</h1><p className="mt-2 text-[13px] text-[#6b6459]">Apply Academy learning to hypothetical or fully anonymized scenarios within scope.</p></div><Link href="/dashboard/case-studies/new" className="inline-flex min-h-11 items-center rounded-xl bg-[#1C3327] px-6 text-[13px] font-semibold text-white">Begin a case study</Link></header>
+      <div className="rounded-xl border border-[#e8d4a8] bg-[#fef6e7] px-5 py-4 text-[12px] leading-6 text-[#7a5c1e]"><strong>Privacy boundary:</strong> Never submit names, contact details, photographs, or other identifying client information. Case work is educational and does not authorize diagnosis or treatment.</div>
+      {cases.length === 0 ? <div className="rounded-[20px] border border-[#ded7cb] bg-[#F5F0E8] p-10 text-center"><h2 className="font-playfair text-xl font-bold text-[#1C3327]">No case studies submitted</h2><p className="mt-2 text-[13px] text-[#6b6459]">Your first submission will appear here with its real review status and faculty feedback.</p></div> : <div className="space-y-4">{cases.map((item) => <article key={item.id} className="rounded-[18px] border border-[#ded7cb] bg-white p-6"><div className="flex flex-wrap items-start justify-between gap-4"><div><h2 className="font-playfair text-xl font-bold text-[#1C3327]">{item.title}</h2><p className="mt-1 text-[11px] text-[#8a7a6a]">{item.course?.title ?? "Independent Academy case"} · Submitted {item.submittedAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p></div><div className="flex items-center gap-3"><StatusBadge status={item.status} />{item.wuAwarded ? <span className="text-[12px] font-bold text-[#8a6b30]">+{item.wuAwarded} WU</span> : null}</div></div>{item.feedback ? <div className="mt-5 rounded-xl border border-[#cfe0d3] bg-[#f0f7f3] p-4"><p className="text-[10px] font-bold uppercase tracking-[0.13em] text-[#4a7c59]">Faculty feedback</p><p className="mt-2 whitespace-pre-wrap text-[12px] leading-6 text-[#2d5240]">{item.feedback}</p></div> : <p className="mt-4 text-[12px] italic text-[#8a7a6a]">Awaiting faculty review. No WU is awarded until an authorized reviewer approves the work.</p>}</article>)}</div>}
     </div>
   );
 }

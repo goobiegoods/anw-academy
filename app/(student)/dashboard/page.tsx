@@ -36,7 +36,7 @@ export default async function ReadingRoomPage() {
     );
   }
 
-  const [enrollments, completedProgress, recentDiscoveries, schools] = await Promise.all([
+  const [enrollments, completedProgress, recentDiscoveries, schools, announcements] = await Promise.all([
     prisma.enrollment.findMany({
       where: { userId: user.id },
       include: {
@@ -73,6 +73,11 @@ export default async function ReadingRoomPage() {
     prisma.school.findMany({
       orderBy: { order: "asc" },
       include: { _count: { select: { courses: true } } },
+    }),
+    prisma.announcement.findMany({
+      where: { audience: { in: ["all", "students"] } },
+      orderBy: { createdAt: "desc" },
+      take: 2,
     }),
   ]);
 
@@ -152,6 +157,23 @@ export default async function ReadingRoomPage() {
           — Orel Fitch, Founder &amp; Academic Director
         </p>
       </div>
+
+      {announcements.length > 0 && (
+        <section aria-labelledby="reading-room-notices" className="rounded-2xl border border-[#ded7cb] bg-white px-6 py-5">
+          <div className="flex items-center justify-between gap-4">
+            <h2 id="reading-room-notices" className="font-playfair text-lg font-bold text-[#1C3327]">Academy notices</h2>
+            <Link href="/dashboard/student-life" className="text-[12px] font-medium text-[#4a7c59] hover:underline">Student Life →</Link>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {announcements.map((announcement) => (
+              <article key={announcement.id} className="rounded-xl bg-[#f7f3eb] px-4 py-3">
+                <p className="text-[12px] font-semibold text-[#1a1a1a]">{announcement.title}</p>
+                <p className="mt-1 line-clamp-2 text-[11px] leading-5 text-[#6b6459]">{announcement.body}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── 3. Current Studies ──────────────────────────────────────────── */}
       <div>

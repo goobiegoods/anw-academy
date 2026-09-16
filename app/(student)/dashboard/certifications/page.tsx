@@ -122,10 +122,13 @@ export default async function CertificationsPage() {
                     </span>
                     <span>{progress}%</span>
                   </div>
-                  {(cert.requiredCaseStudies > 0 || cert.requiredCapstone) && (
+                  {(cert.requiredCourses.length > 0 || cert.requiredCaseStudies > 0 || cert.requiredCapstone) && (
                     <p className="text-[11px] text-[#8a7a6a] mt-3">
                       Also requires:{" "}
                       {[
+                        cert.requiredCourses.length > 0
+                          ? `${cert.requiredCourses.length} required course${cert.requiredCourses.length === 1 ? "" : "s"}`
+                          : null,
                         cert.requiredCaseStudies > 0
                           ? `${approvedCaseStudies}/${cert.requiredCaseStudies} approved case studies`
                           : null,

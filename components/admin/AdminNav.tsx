@@ -13,8 +13,8 @@ import {
   Inbox,
   LogOut,
   Shield,
+  Megaphone,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/admin",             label: "Overview",    icon: LayoutDashboard },
@@ -22,6 +22,7 @@ const navItems = [
   { href: "/admin/content",     label: "Content",     icon: BookOpen },
   { href: "/admin/discussions", label: "Discussions", icon: MessageSquare },
   { href: "/admin/support",     label: "Support",     icon: Inbox },
+  { href: "/admin/announcements", label: "Announcements", icon: Megaphone },
   { href: "/admin/analytics",   label: "Analytics",   icon: BarChart3 },
   { href: "/admin/certifications", label: "Certifications", icon: Award },
   { href: "/admin/faculty",     label: "Faculty",     icon: GraduationCap },
