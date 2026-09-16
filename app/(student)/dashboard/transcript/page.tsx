@@ -72,7 +72,7 @@ export default async function TranscriptPage() {
     const done = lessons.filter((l) => completedSet.has(l.id)).length;
     const status =
       lessons.length > 0 && done === lessons.length
-        ? "Mastered"
+        ? "Completed"
         : done > 0
         ? "In Progress"
         : "Enrolled";
@@ -99,7 +99,7 @@ export default async function TranscriptPage() {
   });
 
   const statusStyle = (status: string) =>
-    status === "Mastered"
+    status === "Completed"
       ? { color: FOREST, fontWeight: 600 }
       : status === "In Progress"
       ? { color: "#8a6b30", fontWeight: 500 }
@@ -276,7 +276,7 @@ export default async function TranscriptPage() {
                             {row.hours}
                           </td>
                           <td className="py-2.5 pr-4 text-[12.5px]" style={{ color: "#5a5348" }}>
-                            {row.status === "Mastered" ? row.wu : "—"}
+                            {row.status === "Completed" ? row.wu : "—"}
                           </td>
                           <td className="py-2.5 text-[12px]" style={statusStyle(row.status)}>
                             {row.status}

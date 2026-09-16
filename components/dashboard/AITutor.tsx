@@ -47,11 +47,17 @@ const GENERIC_STARTERS = [
   "How do traditional and modern approaches to wellness fit together?",
 ];
 
-export default function AITutor({ schools }: { schools: SchoolOption[] }) {
+export default function AITutor({
+  schools,
+  initialQuestion = "",
+}: {
+  schools: SchoolOption[];
+  initialQuestion?: string;
+}) {
   const [schoolContext, setSchoolContext] = useState("");
   const [courseContext, setCourseContext] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(initialQuestion);
   const [streaming, setStreaming] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 

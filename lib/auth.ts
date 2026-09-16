@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { Prisma } from "@prisma/client";
+import { levelForWU } from "@/lib/academy-2.0/academic-progress";
 
 /**
  * Resolve the current ANW user from a verified Supabase identity.
@@ -26,24 +28,58 @@ export async function getCurrentUser() {
   }
 }
 
+export async function awardWUInTransaction(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  amount: number,
+  sourceType: string,
+  description: string,
+  sourceId?: string
+): Promise<boolean> {
+  if (!Number.isInteger(amount) || amount <= 0) return false;
+
+  if (sourceId) {
+    const existing = await tx.wellnessUnitTransaction.findFirst({
+      where: { userId, sourceType, sourceId },
+      select: { id: true },
+    });
+    if (existing) return false;
+  }
+
+  await tx.wellnessUnitTransaction.create({
+    data: { userId, amount, sourceType, sourceId, description },
+  });
+
+  const profile = await tx.studentProfile.findUnique({ where: { userId } });
+  if (profile) {
+    const totalWU = profile.totalWU + amount;
+    await tx.studentProfile.update({
+      where: { userId },
+      data: { totalWU: { increment: amount }, level: levelForWU(totalWU) },
+    });
+  }
+
+  return true;
+}
+
 export async function awardWU(
   userId: string,
   amount: number,
   sourceType: string,
   description: string,
   sourceId?: string
-) {
-  await prisma.wellnessUnitTransaction.create({
-    data: { userId, amount, sourceType, sourceId, description },
-  });
-  const profile = await prisma.studentProfile.findUnique({ where: { userId } });
-  if (profile) {
-    const totalWU = profile.totalWU + amount;
-    const level =
-      totalWU >= 1250 ? 6 : totalWU >= 1000 ? 5 : totalWU >= 750 ? 4 : totalWU >= 500 ? 3 : totalWU >= 150 ? 2 : 1;
-    await prisma.studentProfile.update({
-      where: { userId },
-      data: { totalWU, level },
-    });
+): Promise<boolean> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await prisma.$transaction(
+        (tx) => awardWUInTransaction(tx, userId, amount, sourceType, description, sourceId),
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+      );
+    } catch (error) {
+      const retryable = error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034";
+      if (!retryable || attempt === 2) throw error;
+    }
   }
+
+  return false;
 }

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:academic-integrity": "ts-node --project tsconfig.verify.json scripts/verify-academic-integrity.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.102.0",

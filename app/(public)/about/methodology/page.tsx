@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AcademySeal from "@/components/ui/academy-seal";
+import { EVIDENCE_LEVELS } from "@/lib/academy-2.0/evidence-standard";
 
 export const metadata = {
   title: "Curriculum Methodology — Academy of Natural Wellness",
@@ -7,39 +8,6 @@ export const metadata = {
 
 const FOREST = "#1C3327";
 const GOLD = "#D4A94A";
-
-const EVIDENCE_LEVELS = [
-  {
-    label: "Established science",
-    color: "#2D6A4F",
-    description: "Supported by strong scientific consensus or replicated, high-quality evidence.",
-    example: "Core anatomy, physiology, and well-established safety guidance.",
-  },
-  {
-    label: "Evidence-informed practice",
-    color: "#3B6F8F",
-    description: "Supported by meaningful evidence, with limits that depend on context, population, or method.",
-    example: "Promising practices that require calibrated claims and individual judgment.",
-  },
-  {
-    label: "Emerging research",
-    color: "#8A6B30",
-    description: "Actively studied and potentially useful, but not yet settled enough for confident conclusions.",
-    example: "Early findings, plausible mechanisms, and questions still under investigation.",
-  },
-  {
-    label: "Traditional / historical",
-    color: "#76568A",
-    description: "Taught to understand a tradition on its own terms; longevity and cultural importance are not proof of efficacy.",
-    example: "Classical texts, lineage concepts, and historical systems of interpretation.",
-  },
-  {
-    label: "Theoretical / speculative",
-    color: "#8B4A3C",
-    description: "A model or claim with limited direct evidence, presented as a possibility rather than an established fact.",
-    example: "Contested explanations and hypotheses that require explicit uncertainty.",
-  },
-];
 
 const SECTIONS = [
   {
