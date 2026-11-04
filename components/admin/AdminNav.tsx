@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 const navItems = [
+  { href: "/admin/teaching-media", label: "Faculty Studio", icon: BookOpen },
   { href: "/admin/applications", label: "Admissions", icon: Inbox },
   { href: "/admin/reviews", label: "Faculty Review", icon: GraduationCap },
   { href: "/admin", label: "Overview", icon: LayoutDashboard },

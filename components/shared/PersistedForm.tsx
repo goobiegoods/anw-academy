@@ -64,30 +64,39 @@ export default function PersistedForm({
         }
       }}
     >
-      {fields.map((field) => (
-        <label key={field.name} className="block text-sm font-medium">
-          {field.label}
-          {field.type === "textarea" ? (
-            <textarea
-              name={field.name}
-              required={field.required}
-              maxLength={field.maxLength || 8000}
-              defaultValue={field.value}
-              rows={4}
-              className="mt-2 w-full border border-[#DDD5C5] rounded-xl p-3 bg-white"
-            />
-          ) : (
-            <input
-              name={field.name}
-              type={field.type || "text"}
-              required={field.required}
-              maxLength={field.maxLength || 500}
-              defaultValue={field.value}
-              className="mt-2 w-full border border-[#DDD5C5] rounded-xl p-3 bg-white"
-            />
-          )}
-        </label>
-      ))}
+      {fields.map((field) =>
+        field.type === "hidden" ? (
+          <input
+            key={field.name}
+            type="hidden"
+            name={field.name}
+            value={field.value || ""}
+          />
+        ) : (
+          <label key={field.name} className="block text-sm font-medium">
+            {field.label}
+            {field.type === "textarea" ? (
+              <textarea
+                name={field.name}
+                required={field.required}
+                maxLength={field.maxLength || 8000}
+                defaultValue={field.value}
+                rows={4}
+                className="mt-2 w-full border border-[#DDD5C5] rounded-xl p-3 bg-white"
+              />
+            ) : (
+              <input
+                name={field.name}
+                type={field.type || "text"}
+                required={field.required}
+                maxLength={field.maxLength || 500}
+                defaultValue={field.value}
+                className="mt-2 w-full border border-[#DDD5C5] rounded-xl p-3 bg-white"
+              />
+            )}
+          </label>
+        ),
+      )}
       <button
         disabled={pending}
         className="bg-[#1C3327] text-[#F3ECDA] rounded-xl px-5 py-3 font-semibold disabled:opacity-50"

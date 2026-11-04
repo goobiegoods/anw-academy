@@ -13,6 +13,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
+import TeachingFilm from "./TeachingFilm";
 import LessonCourseSidebar from "./LessonCourseSidebar";
 import LessonJumpNav from "./LessonJumpNav";
 import type {
@@ -62,6 +63,7 @@ type Props = {
     title: string;
     wuValue: number;
     heroImageUrl: string | null;
+    videoUrl?: string | null;
     content: import("@/lib/lesson-types").LessonContent;
   };
   userId: string | null;
@@ -802,6 +804,13 @@ export default function LessonPageLayout({
             icon={course.school.icon}
             heroImageUrl={lesson.heroImageUrl}
           />
+          {lesson.videoUrl && (
+            <TeachingFilm
+              key={lesson.videoUrl}
+              url={lesson.videoUrl}
+              title={lesson.title}
+            />
+          )}
           {objCard && (
             <div className="mt-6 p-5 bg-white border border-[#e2ddd5] rounded-xl">
               <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#6b6459] mb-3">
