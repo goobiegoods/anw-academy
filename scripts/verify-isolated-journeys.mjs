@@ -258,7 +258,13 @@ Object.assign(process.env, {
   SUPABASE_SERVICE_ROLE_KEY: "",
 });
 const next = (await import("next")).default;
-const academy = next({ dev: true, webpack: true, hostname: "127.0.0.1", port: 3107, conf: { distDir: `.next-journeys-${process.pid}` } });
+const academy = next({
+  dev: true,
+  webpack: true,
+  hostname: "127.0.0.1",
+  port: 3107,
+  conf: { distDir: `.next-journeys-${process.pid}` },
+});
 await academy.prepare();
 const app = http.createServer(academy.getRequestHandler());
 await new Promise((resolve) => app.listen(3107, "127.0.0.1", resolve));
@@ -737,6 +743,49 @@ try {
       assert.equal(row.authenticated_select, false, row.relname);
     }
   });
+  await test("faculty film attachment persists, rejects unsafe URLs and renders in the lesson", async () => {
+    const body = {
+      lessonId: lessons[0].id,
+      videoUrl: "https://youtu.be/abcdefghijk",
+    };
+    assert.equal(
+      (
+        await request("/api/admin/teaching-media", {
+          who: "student",
+          method: "PATCH",
+          body,
+        })
+      ).status,
+      403,
+    );
+    assert.equal(
+      (
+        await request("/api/admin/teaching-media", {
+          who: "admin",
+          method: "PATCH",
+          body: { ...body, videoUrl: "javascript:alert(1)" },
+        })
+      ).status,
+      400,
+    );
+    const saved = await request("/api/admin/teaching-media", {
+      who: "admin",
+      method: "PATCH",
+      body,
+    });
+    assert.equal(saved.status, 200, await saved.text());
+    assert.equal(
+      (await prisma.lesson.findUnique({ where: { id: lessons[0].id } }))
+        .videoUrl,
+      body.videoUrl,
+    );
+    const page = await request(
+      `/dashboard/courses/${course.slug}/lessons/${lessons[0].id}`,
+      { who: "student" },
+    );
+    assert.equal(page.status, 200);
+    assert.match(await page.text(), /Play the teaching/);
+  });
   writeFileSync(
     "/tmp/anw-journey-results.json",
     JSON.stringify(
@@ -757,7 +806,10 @@ try {
 } finally {
   // The custom Next development server can retain framework watchers/pools.
   // All fixtures are memory-only; preserve the assertion exit code on shutdown.
-  const shutdownDeadline = setTimeout(() => process.exit(process.exitCode || 0), 5000);
+  const shutdownDeadline = setTimeout(
+    () => process.exit(process.exitCode || 0),
+    5000,
+  );
   app.closeAllConnections();
   await new Promise((resolve) => app.close(resolve));
   await academy.close();
