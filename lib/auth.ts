@@ -19,7 +19,7 @@ export async function getCurrentUser() {
 
     if (!authUser?.email) return null;
 
-    return prisma.user.findUnique({
+    return await prisma.user.findUnique({
       where: { email: authUser.email.toLowerCase() },
       include: { studentProfile: true, practitionerProfile: true },
     });
@@ -34,7 +34,7 @@ export async function awardWUInTransaction(
   amount: number,
   sourceType: string,
   description: string,
-  sourceId?: string
+  sourceId?: string,
 ): Promise<boolean> {
   if (!Number.isInteger(amount) || amount <= 0) return false;
 
@@ -67,16 +67,26 @@ export async function awardWU(
   amount: number,
   sourceType: string,
   description: string,
-  sourceId?: string
+  sourceId?: string,
 ): Promise<boolean> {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       return await prisma.$transaction(
-        (tx) => awardWUInTransaction(tx, userId, amount, sourceType, description, sourceId),
-        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+        (tx) =>
+          awardWUInTransaction(
+            tx,
+            userId,
+            amount,
+            sourceType,
+            description,
+            sourceId,
+          ),
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
       );
     } catch (error) {
-      const retryable = error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034";
+      const retryable =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2034";
       if (!retryable || attempt === 2) throw error;
     }
   }

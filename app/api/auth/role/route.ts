@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { ensureAcademyUser } from "@/lib/user-provisioning";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin-emails";
 
-export async function GET() {
+export async function POST() {
   const supabase = await createClient();
   const {
     data: { user: authUser },
@@ -13,10 +13,10 @@ export async function GET() {
     return NextResponse.json({ role: null }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({ where: { email: authUser.email.toLowerCase() } });
+  const user = await ensureAcademyUser(authUser);
   if (!user) return NextResponse.json({ role: null }, { status: 404 });
-  if (isAdminEmail(authUser.email)) return NextResponse.json({ role: "ADMIN" });
-  if (user.role === "ADMIN") return NextResponse.json({ role: null }, { status: 403 });
+  if (authUser.email_confirmed_at && isAdminEmail(authUser.email))
+    return NextResponse.json({ role: "ADMIN" });
 
   return NextResponse.json({ role: user.role });
 }

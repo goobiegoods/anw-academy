@@ -1,3 +1,4 @@
+import { catalogSchools } from "@/lib/catalog";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -11,23 +12,25 @@ export default async function SchoolDetailPage({
 }) {
   const { slug } = await params;
 
-  const school = await prisma.school.findUnique({
-    where: { slug },
-    include: {
-      departments: { include: { courses: true } },
-      courses: {
-        orderBy: { order: "asc" },
-        include: { modules: { include: { lessons: true } } },
-      },
-    },
-  });
+  const school = process.env.DATABASE_URL
+    ? await prisma.school.findUnique({
+        where: { slug },
+        include: {
+          departments: { include: { courses: true } },
+          courses: {
+            orderBy: { order: "asc" },
+            include: { modules: { include: { lessons: true } } },
+          },
+        },
+      })
+    : catalogSchools.find((s) => s.slug === slug);
 
   if (!school) notFound();
 
   const totalWU = school.courses.reduce((n, c) => n + c.wuValue, 0);
   const totalLessons = school.courses.reduce(
     (n, c) => n + c.modules.reduce((m, mod) => m + mod.lessons.length, 0),
-    0
+    0,
   );
 
   return (
@@ -98,7 +101,10 @@ export default async function SchoolDetailPage({
                 {dept.name}
               </h3>
               {dept.description && (
-                <p className="text-[12.5px] text-[#6b6459] mt-2" style={{ lineHeight: 1.7 }}>
+                <p
+                  className="text-[12.5px] text-[#6b6459] mt-2"
+                  style={{ lineHeight: 1.7 }}
+                >
                   {dept.description}
                 </p>
               )}
@@ -124,7 +130,7 @@ export default async function SchoolDetailPage({
             {school.courses.map((course) => {
               const lessonCount = course.modules.reduce(
                 (n, m) => n + m.lessons.length,
-                0
+                0,
               );
               return (
                 <div

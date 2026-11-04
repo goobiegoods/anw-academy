@@ -16,7 +16,12 @@ type ExamMeta = {
   schoolColor: string;
 };
 
-type ExamQuestion = { id: string; prompt: string; type: string; options: string[] };
+type ExamQuestion = {
+  id: string;
+  prompt: string;
+  type: string;
+  options: string[];
+};
 
 type ExamResult = {
   score: number;
@@ -99,10 +104,15 @@ export default function ExamRunner({ exam }: { exam: ExamMeta }) {
   useEffect(() => {
     if (phase !== "active" || secondsLeft === null) return;
     if (secondsLeft <= 0) {
-      submit();
-      return;
+      const timer = setTimeout(() => {
+        void submit();
+      }, 0);
+      return () => clearTimeout(timer);
     }
-    const t = setTimeout(() => setSecondsLeft((s) => (s === null ? null : s - 1)), 1000);
+    const t = setTimeout(
+      () => setSecondsLeft((s) => (s === null ? null : s - 1)),
+      1000,
+    );
     return () => clearTimeout(t);
   }, [phase, secondsLeft, submit]);
 
@@ -112,12 +122,21 @@ export default function ExamRunner({ exam }: { exam: ExamMeta }) {
   if (phase === "intro") {
     return (
       <div className="max-w-2xl space-y-6">
-        <Link href="/dashboard/courses" className="text-[13px] text-[#6b6459] hover:text-[#1a1a1a]">
+        <Link
+          href="/dashboard/courses"
+          className="text-[13px] text-[#6b6459] hover:text-[#1a1a1a]"
+        >
           ← Back to courses
         </Link>
-        <div className="rounded-2xl px-8 py-10 text-white" style={{ backgroundColor: color }}>
+        <div
+          className="rounded-2xl px-8 py-10 text-white"
+          style={{ backgroundColor: color }}
+        >
           <p className="text-[10px] uppercase tracking-[0.25em] font-bold text-white/60 mb-2">
-            {exam.type === "final" ? "School Final Exam" : "Course Midterm Exam"} · {exam.contextName}
+            {exam.type === "final"
+              ? "School Final Exam"
+              : "Course Midterm Exam"}{" "}
+            · {exam.contextName}
           </p>
           <h1 className="font-playfair text-3xl font-bold">{exam.title}</h1>
         </div>
@@ -125,20 +144,40 @@ export default function ExamRunner({ exam }: { exam: ExamMeta }) {
           <div className="grid grid-cols-2 gap-5 mb-6">
             {[
               { label: "Questions", value: exam.questionCount },
-              { label: "Time Limit", value: exam.timeLimitMinutes ? `${exam.timeLimitMinutes} min` : "Untimed" },
+              {
+                label: "Time Limit",
+                value: exam.timeLimitMinutes
+                  ? `${exam.timeLimitMinutes} min`
+                  : "Untimed",
+              },
               { label: "To Pass", value: `${exam.passingScore}%` },
               { label: "Reward", value: `${exam.wuValue} WU` },
             ].map((s) => (
               <div key={s.label}>
-                <p className="font-playfair text-2xl font-bold" style={{ color }}>{s.value}</p>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-[#9a9088]">{s.label}</p>
+                <p
+                  className="font-playfair text-2xl font-bold"
+                  style={{ color }}
+                >
+                  {s.value}
+                </p>
+                <p className="text-[10px] uppercase tracking-[0.15em] text-[#9a9088]">
+                  {s.label}
+                </p>
               </div>
             ))}
           </div>
-          <ul className="text-[13px] text-[#6b6459] space-y-2 mb-6" style={{ lineHeight: 1.6 }}>
-            <li>• The timer starts when you begin and is enforced on submission.</li>
+          <ul
+            className="text-[13px] text-[#6b6459] space-y-2 mb-6"
+            style={{ lineHeight: 1.6 }}
+          >
+            <li>
+              • The timer starts when you begin and is enforced on submission.
+            </li>
             <li>• Questions rotate on each retake.</li>
-            <li>• A failed attempt has a {exam.cooldownHours}-hour cooldown before retaking.</li>
+            <li>
+              • A failed attempt has a {exam.cooldownHours}-hour cooldown before
+              retaking.
+            </li>
             <li>• You earn {exam.wuValue} WU the first time you pass.</li>
           </ul>
           {error && (
@@ -168,11 +207,16 @@ export default function ExamRunner({ exam }: { exam: ExamMeta }) {
           style={{ backgroundColor: result.passed ? color : "#7c2a2a" }}
         >
           <p className="text-[10px] uppercase tracking-[0.25em] font-bold text-white/60 mb-3">
-            {result.timedOut ? "Time Expired" : result.passed ? "Passed" : "Not Passed"}
+            {result.timedOut
+              ? "Time Expired"
+              : result.passed
+                ? "Passed"
+                : "Not Passed"}
           </p>
           <p className="font-playfair text-6xl font-bold">{result.score}%</p>
           <p className="text-white/80 text-sm mt-2">
-            {result.correct} of {result.total} correct · {result.passingScore}% required
+            {result.correct} of {result.total} correct · {result.passingScore}%
+            required
           </p>
           {result.passed && (
             <p className="mt-4 inline-block bg-white/15 rounded-full px-5 py-2 text-sm font-semibold">
@@ -182,10 +226,15 @@ export default function ExamRunner({ exam }: { exam: ExamMeta }) {
         </div>
 
         <div className="bg-white border border-[#e2ddd5] rounded-2xl p-6">
-          <h2 className="font-playfair text-lg font-bold text-[#1a1a1a] mb-4">Score Breakdown</h2>
+          <h2 className="font-playfair text-lg font-bold text-[#1a1a1a] mb-4">
+            Score Breakdown
+          </h2>
           <div className="space-y-4">
             {result.breakdown.map((b, i) => (
-              <div key={b.id} className="border-b border-[#f0ece4] pb-4 last:border-b-0">
+              <div
+                key={b.id}
+                className="border-b border-[#f0ece4] pb-4 last:border-b-0"
+              >
                 <p className="text-[13px] font-medium text-[#1a1a1a] mb-1">
                   <span style={{ color: b.isCorrect ? "#4a7c59" : "#b3403f" }}>
                     {b.isCorrect ? "✓" : "✗"}
@@ -194,7 +243,8 @@ export default function ExamRunner({ exam }: { exam: ExamMeta }) {
                 </p>
                 {!b.isCorrect && (
                   <p className="text-[12px] text-[#6b6459] ml-4">
-                    Correct answer: <strong>{b.correctAnswer.toUpperCase()}</strong>
+                    Correct answer:{" "}
+                    <strong>{b.correctAnswer.toUpperCase()}</strong>
                     {b.explanation ? ` — ${b.explanation}` : ""}
                   </p>
                 )}
@@ -256,8 +306,14 @@ export default function ExamRunner({ exam }: { exam: ExamMeta }) {
       </div>
 
       {questions.map((q, qi) => (
-        <div key={q.id} className="bg-white border border-[#e2ddd5] rounded-xl p-5">
-          <p className="text-[14px] font-medium text-[#1a1a1a] mb-3" style={{ lineHeight: 1.6 }}>
+        <div
+          key={q.id}
+          className="bg-white border border-[#e2ddd5] rounded-xl p-5"
+        >
+          <p
+            className="text-[14px] font-medium text-[#1a1a1a] mb-3"
+            style={{ lineHeight: 1.6 }}
+          >
             {qi + 1}. {q.prompt}
           </p>
           <div className="space-y-2">
@@ -277,11 +333,17 @@ export default function ExamRunner({ exam }: { exam: ExamMeta }) {
                   <span className="flex items-start gap-3">
                     <span
                       className="flex-shrink-0 w-6 h-6 rounded-full border flex items-center justify-center text-[11px] font-bold"
-                      style={{ borderColor: selected ? color : "#cfc8bc", color: selected ? color : "#6b6459" }}
+                      style={{
+                        borderColor: selected ? color : "#cfc8bc",
+                        color: selected ? color : "#6b6459",
+                      }}
                     >
                       {LETTERS[oi]}
                     </span>
-                    <span className="text-[13px] text-[#1a1a1a] pt-0.5" style={{ lineHeight: 1.5 }}>
+                    <span
+                      className="text-[13px] text-[#1a1a1a] pt-0.5"
+                      style={{ lineHeight: 1.5 }}
+                    >
                       {opt.replace(/^[A-D][.):]\s*/, "")}
                     </span>
                   </span>
@@ -306,7 +368,9 @@ export default function ExamRunner({ exam }: { exam: ExamMeta }) {
             className="w-full text-white font-semibold py-3.5 rounded-full min-h-[48px] disabled:opacity-50"
             style={{ backgroundColor: color }}
           >
-            {busy ? "Submitting…" : `Submit Exam (${answeredCount}/${questions.length})`}
+            {busy
+              ? "Submitting…"
+              : `Submit Exam (${answeredCount}/${questions.length})`}
           </button>
         </div>
       </div>

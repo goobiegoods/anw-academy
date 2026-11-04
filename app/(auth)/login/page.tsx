@@ -17,8 +17,21 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    ) {
+      setError(
+        "Student sign-in is unavailable on this preview until an isolated Academy backend is connected.",
+      );
+      setLoading(false);
+      return;
+    }
     const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (authError) {
       setError(authError.message);
@@ -29,7 +42,7 @@ export default function LoginPage() {
     // Role-based redirect: ADMIN → /admin, PRACTITIONER → /practitioner, STUDENT → /dashboard
     let destination = "/dashboard";
     try {
-      const res = await fetch("/api/auth/role");
+      const res = await fetch("/api/auth/role", { method: "POST" });
       if (res.ok) {
         const { role } = await res.json();
         if (role === "ADMIN") destination = "/admin";
@@ -49,8 +62,12 @@ export default function LoginPage() {
             ANW
           </div>
         </Link>
-        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Welcome back</h1>
-        <p className="text-[#6b6459] mt-2">Sign in to The Academy of Natural Wellness</p>
+        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">
+          Welcome back
+        </h1>
+        <p className="text-[#6b6459] mt-2">
+          Sign in to The Academy of Natural Wellness
+        </p>
       </div>
 
       <div className="bg-white border border-[#e2ddd5] rounded-[20px] shadow-card p-8">
@@ -61,9 +78,16 @@ export default function LoginPage() {
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5">Email address</label>
+            <label
+              className="block text-sm font-medium text-[#1a1a1a] mb-1.5"
+              htmlFor="email"
+            >
+              Email address
+            </label>
             <input
               required
+              id="email"
+              autoComplete="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -72,9 +96,16 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#1a1a1a] mb-1.5">Password</label>
+            <label
+              className="block text-sm font-medium text-[#1a1a1a] mb-1.5"
+              htmlFor="password"
+            >
+              Password
+            </label>
             <input
               required
+              id="password"
+              autoComplete="current-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -93,7 +124,10 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center text-sm text-[#6b6459]">
           Don&apos;t have an account?{" "}
-          <Link href="/admissions" className="text-[#4a7c59] font-medium hover:underline">
+          <Link
+            href="/admissions"
+            className="text-[#4a7c59] font-medium hover:underline"
+          >
             Apply to ANW
           </Link>
         </div>

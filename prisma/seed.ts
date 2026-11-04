@@ -21,17 +21,36 @@ import { CERTIFICATIONS } from "./curriculum/certifications";
 dotenv.config({ path: ".env.local", override: true });
 dotenv.config();
 
-const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/$/, "");
+const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(
+  /\/$/,
+  "",
+);
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
-  console.error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  console.error(
+    "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY",
+  );
   process.exit(1);
+}
+
+if (
+  process.env.ANW_SEED_ISOLATED_TARGET !== SUPABASE_URL ||
+  !process.env.ANW_SEED_ISOLATED_TARGET
+) {
+  throw new Error(
+    "Destructive seed is disabled. Explicitly identify a disposable isolated target with ANW_SEED_ISOLATED_TARGET. Never use the production Academy.",
+  );
 }
 
 const BASE = `${SUPABASE_URL}/rest/v1`;
 
-async function rq(table: string, method: "POST" | "DELETE", params: string, body?: unknown) {
+async function rq(
+  table: string,
+  method: "POST" | "DELETE",
+  params: string,
+  body?: unknown,
+) {
   const url = `${BASE}/${table}?${params}`;
   const headers: Record<string, string> = {
     apikey: SERVICE_KEY,
@@ -51,12 +70,19 @@ async function rq(table: string, method: "POST" | "DELETE", params: string, body
   return null;
 }
 
-async function batchIns(table: string, rows: Record<string, unknown>[], size = 50) {
+async function batchIns(
+  table: string,
+  rows: Record<string, unknown>[],
+  size = 50,
+) {
   if (!rows.length) return;
   for (let i = 0; i < rows.length; i += size) {
     const chunk = rows.slice(i, i + size);
     await rq(table, "POST", "", chunk);
-    if (rows.length > size) console.log(`    ${table}: ${Math.min(i + size, rows.length)}/${rows.length}`);
+    if (rows.length > size)
+      console.log(
+        `    ${table}: ${Math.min(i + size, rows.length)}/${rows.length}`,
+      );
   }
 }
 
@@ -65,12 +91,15 @@ async function del(table: string) {
 }
 
 async function cleanAuthUsers() {
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?per_page=1000&page=1`, {
-    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
-  });
+  const res = await fetch(
+    `${SUPABASE_URL}/auth/v1/admin/users?per_page=1000&page=1`,
+    {
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+    },
+  );
   if (!res.ok) return;
-  const data = await res.json() as { users?: { id: string }[] };
-  for (const u of (data.users ?? [])) {
+  const data = (await res.json()) as { users?: { id: string }[] };
+  for (const u of data.users ?? []) {
     await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${u.id}`, {
       method: "DELETE",
       headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
@@ -97,10 +126,16 @@ async function createAuthUser(email: string, password: string) {
 }
 
 function slugify(title: string) {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
-function questionRows(quizId: string, questions: GeneratedQuestion[]): Record<string, unknown>[] {
+function questionRows(
+  quizId: string,
+  questions: GeneratedQuestion[],
+): Record<string, unknown>[] {
   return questions.map((q) => ({
     id: randomUUID(),
     quizId,
@@ -131,15 +166,40 @@ async function main() {
   // ── 1. Clean (reverse dependency order) ──────────────────────────────────
   console.log("Cleaning existing data…");
   const cleanOrder = [
-    "ClientSession", "DiscussionPost", "AssignmentSubmission", "QuizAttempt",
-    "LessonProgress", "Enrollment", "CaseStudy", "WellnessUnitTransaction",
-    "StudentCertification", "Capstone", "Client", "PractitionerProfile",
-    "StudentProfile", "User", "Question", "Quiz", "Lesson", "Module",
-    "Discussion", "Assignment", "Course", "Department", "School",
-    "Certification", "Application", "Resource", "Announcement",
+    "ClientSession",
+    "DiscussionPost",
+    "AssignmentSubmission",
+    "QuizAttempt",
+    "LessonProgress",
+    "Enrollment",
+    "CaseStudy",
+    "WellnessUnitTransaction",
+    "StudentCertification",
+    "Capstone",
+    "Client",
+    "PractitionerProfile",
+    "StudentProfile",
+    "User",
+    "Question",
+    "Quiz",
+    "Lesson",
+    "Module",
+    "Discussion",
+    "Assignment",
+    "Course",
+    "Department",
+    "School",
+    "Certification",
+    "Application",
+    "Resource",
+    "Announcement",
   ];
   for (const t of cleanOrder) {
-    try { await del(t); } catch { /* already empty */ }
+    try {
+      await del(t);
+    } catch {
+      /* already empty */
+    }
   }
   await cleanAuthUsers();
   console.log("  ✓ Cleared\n");
@@ -217,7 +277,13 @@ async function main() {
         mod.lessons.forEach((lesson, li) => {
           const lessonIndex = mi * 3 + li;
           const lessonId = randomUUID();
-          const content = composeLessonContent(school, course, lesson, ci, lessonIndex);
+          const content = composeLessonContent(
+            school,
+            course,
+            lesson,
+            ci,
+            lessonIndex,
+          );
 
           lessonRows.push({
             id: lessonId,
@@ -252,7 +318,9 @@ async function main() {
             questionCount: 3,
             cooldownHours: 0,
           });
-          questionAllRows.push(...questionRows(lessonQuizId, lessonPool.slice(0, 3)));
+          questionAllRows.push(
+            ...questionRows(lessonQuizId, lessonPool.slice(0, 3)),
+          );
         });
       });
 
@@ -313,12 +381,20 @@ async function main() {
       questionCount: 40,
       cooldownHours: 24,
     });
-    questionAllRows.push(...questionRows(schoolFinalQuizId, dedupe(schoolFinalPool).slice(0, 48)));
+    questionAllRows.push(
+      ...questionRows(schoolFinalQuizId, dedupe(schoolFinalPool).slice(0, 48)),
+    );
   }
 
-  console.log(`  Composed ${schoolRows.length} schools, ${courseRows.length} courses, ${lessonCount} lessons`);
-  console.log(`  ${quizRows.length} quizzes, ${questionAllRows.length} questions`);
-  console.log(`  ${assignmentRows.length} assignments, ${discussionRows.length} discussions\n`);
+  console.log(
+    `  Composed ${schoolRows.length} schools, ${courseRows.length} courses, ${lessonCount} lessons`,
+  );
+  console.log(
+    `  ${quizRows.length} quizzes, ${questionAllRows.length} questions`,
+  );
+  console.log(
+    `  ${assignmentRows.length} assignments, ${discussionRows.length} discussions\n`,
+  );
 
   console.log("Writing curriculum to database…");
   await batchIns("School", schoolRows, 20);
@@ -334,43 +410,110 @@ async function main() {
 
   // ── 3. Certifications ────────────────────────────────────────────────────
   console.log("Creating certifications…");
-  await batchIns("Certification", CERTIFICATIONS.map((c) => ({ id: randomUUID(), ...c })));
+  await batchIns(
+    "Certification",
+    CERTIFICATIONS.map((c) => ({ id: randomUUID(), ...c })),
+  );
   console.log(`  ✓ ${CERTIFICATIONS.length} certifications\n`);
 
   // ── 4. Users & profiles ──────────────────────────────────────────────────
   console.log("Creating users…");
   const adminId = randomUUID();
-  await batchIns("User", [{ id: adminId, email: "admin@anwacademy.com", name: "ANW Admin", role: "ADMIN" }]);
+  await batchIns("User", [
+    {
+      id: adminId,
+      email: "admin@anwacademy.com",
+      name: "ANW Admin",
+      role: "ADMIN",
+    },
+  ]);
 
   const students = [
     { id: randomUUID(), email: "student@anwacademy.com", name: "Demo Student" },
     { id: randomUUID(), email: "emma.clarke@student.com", name: "Emma Clarke" },
     { id: randomUUID(), email: "liam.nguyen@student.com", name: "Liam Nguyen" },
-    { id: randomUUID(), email: "sofia.petrov@student.com", name: "Sofia Petrov" },
+    {
+      id: randomUUID(),
+      email: "sofia.petrov@student.com",
+      name: "Sofia Petrov",
+    },
     { id: randomUUID(), email: "noah.okafor@student.com", name: "Noah Okafor" },
-    { id: randomUUID(), email: "maya.rodriguez@student.com", name: "Maya Rodriguez" },
+    {
+      id: randomUUID(),
+      email: "maya.rodriguez@student.com",
+      name: "Maya Rodriguez",
+    },
   ];
-  await batchIns("User", students.map((s) => ({ ...s, role: "STUDENT" })));
+  await batchIns(
+    "User",
+    students.map((s) => ({ ...s, role: "STUDENT" })),
+  );
 
   const certIdForActive = randomUUID(); // placeholder unused, profiles reference by null below
   void certIdForActive;
-  await batchIns("StudentProfile", students.map((s, i) => ({
-    id: randomUUID(),
-    userId: s.id,
-    level: [1, 3, 2, 4, 1, 2][i],
-    totalWU: [0, 560, 210, 820, 60, 340][i],
-    status: "active",
-    bio: `${s.name} is a dedicated student of natural wellness at the Academy.`,
-    location: ["Remote", "Portland, OR", "Austin, TX", "New York, NY", "Chicago, IL", "Denver, CO"][i],
-  })));
+  await batchIns(
+    "StudentProfile",
+    students.map((s, i) => ({
+      id: randomUUID(),
+      userId: s.id,
+      level: [1, 3, 2, 4, 1, 2][i],
+      totalWU: [0, 560, 210, 820, 60, 340][i],
+      status: "active",
+      bio: `${s.name} is a dedicated student of natural wellness at the Academy.`,
+      location: [
+        "Remote",
+        "Portland, OR",
+        "Austin, TX",
+        "New York, NY",
+        "Chicago, IL",
+        "Denver, CO",
+      ][i],
+    })),
+  );
 
   const practitioners = [
-    { id: randomUUID(), email: "evelyn.hartwood@practitioner.com", name: "Evelyn Hartwood", displayName: "Evelyn Hartwood, CNWP", specialties: ["Western Herbalism", "Women's Wellness"], location: "Asheville, NC" },
-    { id: randomUUID(), email: "james.bloom@practitioner.com", name: "James Bloom", displayName: "James Bloom, CNWP", specialties: ["Traditional Chinese Medicine", "Qi Gong"], location: "San Francisco, CA" },
-    { id: randomUUID(), email: "aria.chen@practitioner.com", name: "Aria Chen", displayName: "Aria Chen, CNWP", specialties: ["Classical Homeopathy", "Constitutional Wellness"], location: "Seattle, WA" },
-    { id: randomUUID(), email: "marcus.reed@practitioner.com", name: "Marcus Reed", displayName: "Marcus Reed, CNWP", specialties: ["Functional Wellness", "Metabolic Health"], location: "Austin, TX" },
+    {
+      id: randomUUID(),
+      email: "evelyn.hartwood@practitioner.com",
+      name: "Evelyn Hartwood",
+      displayName: "Evelyn Hartwood, CNWP",
+      specialties: ["Western Herbalism", "Women's Wellness"],
+      location: "Asheville, NC",
+    },
+    {
+      id: randomUUID(),
+      email: "james.bloom@practitioner.com",
+      name: "James Bloom",
+      displayName: "James Bloom, CNWP",
+      specialties: ["Traditional Chinese Medicine", "Qi Gong"],
+      location: "San Francisco, CA",
+    },
+    {
+      id: randomUUID(),
+      email: "aria.chen@practitioner.com",
+      name: "Aria Chen",
+      displayName: "Aria Chen, CNWP",
+      specialties: ["Classical Homeopathy", "Constitutional Wellness"],
+      location: "Seattle, WA",
+    },
+    {
+      id: randomUUID(),
+      email: "marcus.reed@practitioner.com",
+      name: "Marcus Reed",
+      displayName: "Marcus Reed, CNWP",
+      specialties: ["Functional Wellness", "Metabolic Health"],
+      location: "Austin, TX",
+    },
   ];
-  await batchIns("User", practitioners.map((p) => ({ id: p.id, email: p.email, name: p.name, role: "PRACTITIONER" })));
+  await batchIns(
+    "User",
+    practitioners.map((p) => ({
+      id: p.id,
+      email: p.email,
+      name: p.name,
+      role: "PRACTITIONER",
+    })),
+  );
   const practProfiles = practitioners.map((p) => ({
     id: randomUUID(),
     userId: p.id,
@@ -396,7 +539,9 @@ async function main() {
   for (const p of practitioners) await createAuthUser(p.email, demoPassword);
   console.log(`  ✓ Auth accounts created (password: ${demoPassword})\n`);
 
-  console.log(`  ✓ 1 admin, ${students.length} students, ${practitioners.length} practitioners\n`);
+  console.log(
+    `  ✓ 1 admin, ${students.length} students, ${practitioners.length} practitioners\n`,
+  );
 
   // ── 5. Enrollments ───────────────────────────────────────────────────────
   console.log("Creating enrollments…");
@@ -423,11 +568,32 @@ async function main() {
   // ── 6. WU transactions (sample ledger for first student) ─────────────────
   console.log("Creating sample WU ledger…");
   const wuRows = [
-    { sourceType: "lesson", amount: 1, description: "Lesson completed: Plant Medicine — The Original Pharmacy" },
-    { sourceType: "lesson", amount: 1, description: "Lesson completed: How Plants Communicate — The Doctrine of Signatures" },
-    { sourceType: "discussion", amount: 2, description: "Discussion post: Foundations of Plant Medicine" },
-    { sourceType: "discussion", amount: 1, description: "Discussion reply to peer" },
-    { sourceType: "midterm", amount: 10, description: "Midterm passed: Introduction to Herbal Medicine" },
+    {
+      sourceType: "lesson",
+      amount: 1,
+      description: "Lesson completed: Plant Medicine — The Original Pharmacy",
+    },
+    {
+      sourceType: "lesson",
+      amount: 1,
+      description:
+        "Lesson completed: How Plants Communicate — The Doctrine of Signatures",
+    },
+    {
+      sourceType: "discussion",
+      amount: 2,
+      description: "Discussion post: Foundations of Plant Medicine",
+    },
+    {
+      sourceType: "discussion",
+      amount: 1,
+      description: "Discussion reply to peer",
+    },
+    {
+      sourceType: "midterm",
+      amount: 10,
+      description: "Midterm passed: Introduction to Herbal Medicine",
+    },
   ].map((t, i) => ({
     id: randomUUID(),
     userId: students[0].id,
@@ -435,37 +601,142 @@ async function main() {
     sourceId: null,
     amount: t.amount,
     description: t.description,
-    createdAt: new Date(Date.now() - (5 - i) * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(
+      Date.now() - (5 - i) * 24 * 60 * 60 * 1000,
+    ).toISOString(),
   }));
   await batchIns("WellnessUnitTransaction", wuRows);
   console.log(`  ✓ ${wuRows.length} transactions\n`);
 
   // ── 7. Applications ──────────────────────────────────────────────────────
   console.log("Creating applications…");
-  const appBase = { phone: null as string | null, location: null as string | null, reviewedAt: null as string | null };
+  const appBase = {
+    phone: null as string | null,
+    location: null as string | null,
+    reviewedAt: null as string | null,
+  };
   await batchIns("Application", [
-    { ...appBase, id: randomUUID(), name: "Clara Whitfield", email: "clara.whitfield@email.com", phone: "+1-503-555-0121", location: "Portland, OR", motivation: "I have studied herbalism independently for two years and want to deepen my knowledge within a structured, community-based program.", experienceLevel: "intermediate", schoolInterest: "School of Herbal Medicine", pathway: "practitioner", status: "SUBMITTED" },
-    { ...appBase, id: randomUUID(), name: "Theo Marsh", email: "theo.marsh@email.com", location: "Denver, CO", motivation: "After years in conventional healthcare, I am drawn to integrative wellness. ANW offers the TCM foundation I have been searching for.", experienceLevel: "beginner", schoolInterest: "School of Traditional Chinese Medicine", pathway: "personal", status: "UNDER_REVIEW" },
-    { ...appBase, id: randomUUID(), name: "Simone Okafor", email: "simone.okafor@email.com", location: "Atlanta, GA", motivation: "I want to combine functional nutrition with formal study to serve my community more holistically.", experienceLevel: "advanced", schoolInterest: "School of Functional Wellness", pathway: "practitioner", status: "ACCEPTED" },
-    { ...appBase, id: randomUUID(), name: "Rafael Torres", email: "rafael.torres@email.com", location: "Miami, FL", motivation: "Wellness entrepreneurship has always called to me, and I am ready to build a business around natural health education.", experienceLevel: "beginner", schoolInterest: "School of Wellness Entrepreneurship", pathway: "entrepreneur", status: "SUBMITTED" },
+    {
+      ...appBase,
+      id: randomUUID(),
+      name: "Clara Whitfield",
+      email: "clara.whitfield@email.com",
+      phone: "+1-503-555-0121",
+      location: "Portland, OR",
+      motivation:
+        "I have studied herbalism independently for two years and want to deepen my knowledge within a structured, community-based program.",
+      experienceLevel: "intermediate",
+      schoolInterest: "School of Herbal Medicine",
+      pathway: "practitioner",
+      status: "SUBMITTED",
+    },
+    {
+      ...appBase,
+      id: randomUUID(),
+      name: "Theo Marsh",
+      email: "theo.marsh@email.com",
+      location: "Denver, CO",
+      motivation:
+        "After years in conventional healthcare, I am drawn to integrative wellness. ANW offers the TCM foundation I have been searching for.",
+      experienceLevel: "beginner",
+      schoolInterest: "School of Traditional Chinese Medicine",
+      pathway: "personal",
+      status: "UNDER_REVIEW",
+    },
+    {
+      ...appBase,
+      id: randomUUID(),
+      name: "Simone Okafor",
+      email: "simone.okafor@email.com",
+      location: "Atlanta, GA",
+      motivation:
+        "I want to combine functional nutrition with formal study to serve my community more holistically.",
+      experienceLevel: "advanced",
+      schoolInterest: "School of Functional Wellness",
+      pathway: "practitioner",
+      status: "ACCEPTED",
+    },
+    {
+      ...appBase,
+      id: randomUUID(),
+      name: "Rafael Torres",
+      email: "rafael.torres@email.com",
+      location: "Miami, FL",
+      motivation:
+        "Wellness entrepreneurship has always called to me, and I am ready to build a business around natural health education.",
+      experienceLevel: "beginner",
+      schoolInterest: "School of Wellness Entrepreneurship",
+      pathway: "entrepreneur",
+      status: "SUBMITTED",
+    },
   ]);
   console.log("  ✓ 4 applications\n");
 
   // ── 8. Resources & announcements ─────────────────────────────────────────
   console.log("Creating resources & announcements…");
   await batchIns("Resource", [
-    { id: randomUUID(), title: "ANW Wellness Assessment Questionnaire", type: "template", tags: ["intake", "assessment"] },
-    { id: randomUUID(), title: "Herb-Drug Interaction Reference Chart", type: "reference", tags: ["herbalism", "safety"] },
-    { id: randomUUID(), title: "TCM Five Element Correspondences", type: "reference", tags: ["tcm", "theory"] },
-    { id: randomUUID(), title: "Homeopathic Case-Taking Template", type: "template", tags: ["homeopathy", "case-taking"] },
-    { id: randomUUID(), title: "Functional Intake & Lifestyle Audit", type: "template", tags: ["functional", "intake"] },
-    { id: randomUUID(), title: "Scope of Practice & Referral Guide", type: "policy", tags: ["practice", "scope", "ethics"] },
-    { id: randomUUID(), title: "Wellness Business Plan Template", type: "template", tags: ["entrepreneurship", "business"] },
+    {
+      id: randomUUID(),
+      title: "ANW Wellness Assessment Questionnaire",
+      type: "template",
+      tags: ["intake", "assessment"],
+    },
+    {
+      id: randomUUID(),
+      title: "Herb-Drug Interaction Reference Chart",
+      type: "reference",
+      tags: ["herbalism", "safety"],
+    },
+    {
+      id: randomUUID(),
+      title: "TCM Five Element Correspondences",
+      type: "reference",
+      tags: ["tcm", "theory"],
+    },
+    {
+      id: randomUUID(),
+      title: "Homeopathic Case-Taking Template",
+      type: "template",
+      tags: ["homeopathy", "case-taking"],
+    },
+    {
+      id: randomUUID(),
+      title: "Functional Intake & Lifestyle Audit",
+      type: "template",
+      tags: ["functional", "intake"],
+    },
+    {
+      id: randomUUID(),
+      title: "Scope of Practice & Referral Guide",
+      type: "policy",
+      tags: ["practice", "scope", "ethics"],
+    },
+    {
+      id: randomUUID(),
+      title: "Wellness Business Plan Template",
+      type: "template",
+      tags: ["entrepreneurship", "business"],
+    },
   ]);
   await batchIns("Announcement", [
-    { id: randomUUID(), title: "Welcome to the Academy of Natural Wellness", body: "Your journey toward natural wellness mastery begins here. Explore your courses, connect with your cohort, and reach out to the ANW Scholar whenever you have questions.", audience: "all" },
-    { id: randomUUID(), title: "New full-depth curriculum now live", body: "Every lesson is now a complete ten-card teaching sequence with quizzes, primary sources, vocabulary, and clinical relevance. Dive in and start earning Wellness Units.", audience: "student" },
-    { id: randomUUID(), title: "Case study review window open", body: "Submit completed case studies for mentor review and earn 10–25 WU per approved submission.", audience: "student" },
+    {
+      id: randomUUID(),
+      title: "Welcome to the Academy of Natural Wellness",
+      body: "Your journey toward natural wellness mastery begins here. Explore your courses, connect with your cohort, and reach out to the ANW Scholar whenever you have questions.",
+      audience: "all",
+    },
+    {
+      id: randomUUID(),
+      title: "New full-depth curriculum now live",
+      body: "Every lesson is now a complete ten-card teaching sequence with quizzes, primary sources, vocabulary, and clinical relevance. Dive in and start earning Wellness Units.",
+      audience: "student",
+    },
+    {
+      id: randomUUID(),
+      title: "Case study review window open",
+      body: "Submit completed case studies for mentor review and earn 10–25 WU per approved submission.",
+      audience: "student",
+    },
   ]);
   console.log("  ✓ resources & announcements\n");
 

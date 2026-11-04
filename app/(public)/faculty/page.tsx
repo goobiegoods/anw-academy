@@ -1,3 +1,4 @@
+import { catalogSchools } from "@/lib/catalog";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getInitials } from "@/lib/utils";
@@ -21,11 +22,18 @@ export default async function FacultyDirectoryPage({
   const { school: schoolFilter } = await searchParams;
 
   const [faculty, schools] = await Promise.all([
-    prisma.faculty.findMany({
-      where: { isActive: true },
-      orderBy: [{ isFounding: "desc" }, { joinedAt: "asc" }],
-    }),
-    prisma.school.findMany({ orderBy: { order: "asc" }, select: { name: true } }),
+    process.env.DATABASE_URL
+      ? prisma.faculty.findMany({
+          where: { isActive: true },
+          orderBy: [{ isFounding: "desc" }, { joinedAt: "asc" }],
+        })
+      : Promise.resolve([]),
+    process.env.DATABASE_URL
+      ? prisma.school.findMany({
+          orderBy: { order: "asc" },
+          select: { name: true },
+        })
+      : Promise.resolve(catalogSchools.map((s) => ({ name: s.name }))),
   ]);
 
   const filtered = schoolFilter
@@ -38,7 +46,10 @@ export default async function FacultyDirectoryPage({
       <div className="w-full py-20" style={{ backgroundColor: FOREST }}>
         <div className="max-w-7xl mx-auto px-6 flex flex-col items-center text-center">
           <AcademySeal size="sm" variant="light" />
-          <h1 className="font-playfair text-5xl md:text-6xl font-bold mt-5" style={{ color: "#F3ECDA" }}>
+          <h1
+            className="font-playfair text-5xl md:text-6xl font-bold mt-5"
+            style={{ color: "#F3ECDA" }}
+          >
             Our Faculty
           </h1>
           <p className="font-playfair italic text-[15px] text-white/60 mt-3">
@@ -55,7 +66,11 @@ export default async function FacultyDirectoryPage({
             className="text-[11px] font-semibold px-3.5 py-1.5 rounded-full border transition-colors"
             style={
               !schoolFilter
-                ? { backgroundColor: FOREST, color: "#F3ECDA", borderColor: FOREST }
+                ? {
+                    backgroundColor: FOREST,
+                    color: "#F3ECDA",
+                    borderColor: FOREST,
+                  }
                 : { color: "#6b6459", borderColor: "#DDD5C5" }
             }
           >
@@ -68,7 +83,11 @@ export default async function FacultyDirectoryPage({
               className="text-[11px] font-semibold px-3.5 py-1.5 rounded-full border transition-colors"
               style={
                 schoolFilter === s.name
-                  ? { backgroundColor: FOREST, color: "#F3ECDA", borderColor: FOREST }
+                  ? {
+                      backgroundColor: FOREST,
+                      color: "#F3ECDA",
+                      borderColor: FOREST,
+                    }
                   : { color: "#6b6459", borderColor: "#DDD5C5" }
               }
             >
@@ -83,7 +102,8 @@ export default async function FacultyDirectoryPage({
         {filtered.length === 0 ? (
           <div className="bg-white border border-[#e2ddd5] rounded-2xl p-12 text-center">
             <p className="text-sm text-[#6b6459]">
-              No faculty listed for this school yet — appointments are announced each term.
+              No faculty listed for this school yet — appointments are announced
+              each term.
             </p>
           </div>
         ) : (
@@ -105,16 +125,26 @@ export default async function FacultyDirectoryPage({
                 ) : (
                   <div
                     className="w-24 h-24 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: FOREST, border: `3px solid ${GOLD}` }}
+                    style={{
+                      backgroundColor: FOREST,
+                      border: `3px solid ${GOLD}`,
+                    }}
                   >
-                    <span className="font-playfair font-bold text-2xl" style={{ color: GOLD }}>
+                    <span
+                      className="font-playfair font-bold text-2xl"
+                      style={{ color: GOLD }}
+                    >
                       {getInitials(f.name)}
                     </span>
                   </div>
                 )}
 
-                <h2 className="font-playfair text-xl font-bold text-[#1a1a1a] mt-4">{f.name}</h2>
-                <p className="font-playfair italic text-[13px] text-[#6b6459] mt-0.5">{f.title}</p>
+                <h2 className="font-playfair text-xl font-bold text-[#1a1a1a] mt-4">
+                  {f.name}
+                </h2>
+                <p className="font-playfair italic text-[13px] text-[#6b6459] mt-0.5">
+                  {f.title}
+                </p>
 
                 {f.credentials.length > 0 && (
                   <div className="flex flex-wrap justify-center gap-1.5 mt-3">
@@ -140,7 +170,10 @@ export default async function FacultyDirectoryPage({
                       <span
                         key={s}
                         className="text-[9.5px] font-medium px-2 py-0.5 rounded"
-                        style={{ backgroundColor: "rgba(28,51,39,0.08)", color: FOREST }}
+                        style={{
+                          backgroundColor: "rgba(28,51,39,0.08)",
+                          color: FOREST,
+                        }}
                       >
                         {s.replace("School of ", "")}
                       </span>

@@ -1,18 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/admin-emails";
+import { getAdminUser } from "@/lib/admin";
 
 export async function PATCH(
   _req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user || !isAdminEmail(user.email)) {
+  if (!(await getAdminUser())) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

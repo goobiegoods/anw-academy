@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { checkAndAwardCertifications } from "@/lib/certifications";
 import { formatDate } from "@/lib/utils";
 import AcademySeal from "@/components/ui/academy-seal";
 
@@ -15,23 +14,32 @@ export default async function CertificationsPage() {
   if (!user) {
     return (
       <div className="text-center py-24">
-        <h1 className="font-playfair text-2xl font-bold text-[#1a1a1a]">Certifications</h1>
+        <h1 className="font-playfair text-2xl font-bold text-[#1a1a1a]">
+          Certifications
+        </h1>
         <p className="text-[#6b6459] mt-2 text-sm">
-          <Link href="/login" className="text-[#4a7c59] font-medium">Sign in</Link> to view your certifications.
+          <Link href="/login" className="text-[#4a7c59] font-medium">
+            Sign in
+          </Link>{" "}
+          to view your certifications.
         </p>
       </div>
     );
   }
 
-  // Award anything newly earned before rendering
-  await checkAndAwardCertifications(user.id);
+  // Credentials are issued only by an explicit registrar action.
 
-  const [profile, certifications, studentCerts, approvedCaseStudies] = await Promise.all([
-    prisma.studentProfile.findUnique({ where: { userId: user.id } }),
-    prisma.certification.findMany({ orderBy: [{ level: "asc" }, { title: "asc" }] }),
-    prisma.studentCertification.findMany({ where: { userId: user.id } }),
-    prisma.caseStudy.count({ where: { userId: user.id, status: "approved" } }),
-  ]);
+  const [profile, certifications, studentCerts, approvedCaseStudies] =
+    await Promise.all([
+      prisma.studentProfile.findUnique({ where: { userId: user.id } }),
+      prisma.certification.findMany({
+        orderBy: [{ level: "asc" }, { title: "asc" }],
+      }),
+      prisma.studentCertification.findMany({ where: { userId: user.id } }),
+      prisma.caseStudy.count({
+        where: { userId: user.id, status: "approved" },
+      }),
+    ]);
 
   const totalWU = profile?.totalWU ?? 0;
   const byCertId = new Map(studentCerts.map((sc) => [sc.certificationId, sc]));
@@ -39,7 +47,9 @@ export default async function CertificationsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Certifications</h1>
+        <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">
+          Certifications
+        </h1>
         <p className="text-[#6b6459] mt-1">
           Track your progress toward the Academy&apos;s eight certifications
         </p>
@@ -49,7 +59,10 @@ export default async function CertificationsPage() {
         {certifications.map((cert) => {
           const sc = byCertId.get(cert.id);
           const isAwarded = sc?.status === "awarded";
-          const progress = Math.min(100, Math.round((totalWU / cert.requiredWU) * 100));
+          const progress = Math.min(
+            100,
+            Math.round((totalWU / cert.requiredWU) * 100),
+          );
 
           return (
             <div
@@ -57,8 +70,14 @@ export default async function CertificationsPage() {
               className="rounded-[16px] overflow-hidden flex flex-col"
               style={
                 isAwarded
-                  ? { backgroundColor: FOREST, border: "0.5px solid rgba(255,255,255,0.08)" }
-                  : { backgroundColor: "#FAF7F0", border: "0.5px solid #DDD5C5" }
+                  ? {
+                      backgroundColor: FOREST,
+                      border: "0.5px solid rgba(255,255,255,0.08)",
+                    }
+                  : {
+                      backgroundColor: "#FAF7F0",
+                      border: "0.5px solid #DDD5C5",
+                    }
               }
             >
               {isAwarded ? (
@@ -79,12 +98,18 @@ export default async function CertificationsPage() {
                     {cert.title}
                   </h2>
                   {sc?.awardedAt && (
-                    <p className="text-[12px] mt-1" style={{ color: "rgba(255,255,255,0.50)" }}>
+                    <p
+                      className="text-[12px] mt-1"
+                      style={{ color: "rgba(255,255,255,0.50)" }}
+                    >
                       Awarded {formatDate(sc.awardedAt)}
                     </p>
                   )}
                   {sc?.certificateNumber && (
-                    <p className="text-[11px] font-mono mt-1" style={{ color: "rgba(212,169,74,0.7)" }}>
+                    <p
+                      className="text-[11px] font-mono mt-1"
+                      style={{ color: "rgba(212,169,74,0.7)" }}
+                    >
                       {sc.certificateNumber}
                     </p>
                   )}
@@ -113,16 +138,22 @@ export default async function CertificationsPage() {
                   >
                     <div
                       className="h-full rounded-full"
-                      style={{ width: `${progress}%`, backgroundColor: "#B98A2E" }}
+                      style={{
+                        width: `${progress}%`,
+                        backgroundColor: "#B98A2E",
+                      }}
                     />
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-[#8a7a6a]">
                     <span>
-                      {totalWU.toLocaleString()} of {cert.requiredWU.toLocaleString()} WU
+                      {totalWU.toLocaleString()} of{" "}
+                      {cert.requiredWU.toLocaleString()} WU
                     </span>
                     <span>{progress}%</span>
                   </div>
-                  {(cert.requiredCourses.length > 0 || cert.requiredCaseStudies > 0 || cert.requiredCapstone) && (
+                  {(cert.requiredCourses.length > 0 ||
+                    cert.requiredCaseStudies > 0 ||
+                    cert.requiredCapstone) && (
                     <p className="text-[11px] text-[#8a7a6a] mt-3">
                       Also requires:{" "}
                       {[
@@ -151,17 +182,25 @@ export default async function CertificationsPage() {
               >
                 <span
                   className="text-[12px]"
-                  style={{ color: isAwarded ? "rgba(255,255,255,0.50)" : "#6b6459" }}
+                  style={{
+                    color: isAwarded ? "rgba(255,255,255,0.50)" : "#6b6459",
+                  }}
                 >
                   {cert.duration}
                 </span>
                 <span
                   className="w-1 h-1 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: isAwarded ? "rgba(255,255,255,0.20)" : "#c8bfb0" }}
+                  style={{
+                    backgroundColor: isAwarded
+                      ? "rgba(255,255,255,0.20)"
+                      : "#c8bfb0",
+                  }}
                 />
                 <span
                   className="text-[12px]"
-                  style={{ color: isAwarded ? "rgba(255,255,255,0.50)" : "#6b6459" }}
+                  style={{
+                    color: isAwarded ? "rgba(255,255,255,0.50)" : "#6b6459",
+                  }}
                 >
                   {cert.requiredWU.toLocaleString()} WU required
                 </span>
@@ -179,10 +218,13 @@ export default async function CertificationsPage() {
           Certification Pathways
         </h2>
         <p className="text-[13px] text-[#6b6459] mb-3 leading-relaxed">
-          ANW diplomas are awarded upon completing required coursework and Wellness Unit
-          milestones. Every diploma is publicly verifiable.
+          ANW diplomas are awarded upon completing required coursework and
+          Wellness Unit milestones. Every diploma is publicly verifiable.
         </p>
-        <Link href="/schools" className="text-[13px] text-[#4a7c59] font-medium hover:underline">
+        <Link
+          href="/schools"
+          className="text-[13px] text-[#4a7c59] font-medium hover:underline"
+        >
           View all schools →
         </Link>
       </div>

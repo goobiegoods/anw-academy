@@ -1,3 +1,4 @@
+import { safeInternalPath } from "@/lib/request-policy";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { ensureAcademyUser } from "@/lib/user-provisioning";
@@ -6,9 +7,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const requestedNext = searchParams.get("next") ?? "/dashboard";
-  const next = requestedNext.startsWith("/") && !requestedNext.startsWith("//")
-    ? requestedNext
-    : "/dashboard";
+  const next = safeInternalPath(requestedNext);
 
   if (code) {
     const supabase = await createClient();

@@ -426,3 +426,17 @@ model SupportMessage {
   createdAt  DateTime  @default(now())
   resolvedAt DateTime?
 }
+
+// Migration required on an isolated preview DB before enabling tuition checkout.
+model TuitionOrder {
+  id              String   @id @default(uuid())
+  userId          String
+  courseId        String
+  stripeSessionId String?  @unique
+  amount          Int
+  currency        String
+  status          String   @default("pending")
+  createdAt       DateTime @default(now())
+  paidAt          DateTime?
+  @@index([userId, courseId])
+}

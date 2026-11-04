@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { parseLessonContent } from "@/lib/lesson-types";
@@ -33,6 +33,12 @@ export default async function LessonDetailPage({
   const rawLesson = orderedLessons.find((l) => l.id === lessonId);
   if (!rawLesson) notFound();
 
+  if (!user) redirect("/login");
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { userId_courseId: { userId: user.id, courseId: course.id } },
+  });
+  if (!enrollment || !["active", "completed"].includes(enrollment.status))
+    redirect("/dashboard/courses");
   const parsedContent = parseLessonContent(rawLesson.content);
   if (!parsedContent) notFound();
 
@@ -47,14 +53,21 @@ export default async function LessonDetailPage({
             },
             select: { lessonId: true },
           })
-        ).map((p) => p.lessonId)
+        ).map((p) => p.lessonId),
       )
     : new Set<string>();
 
   // Compute lock state: accessible up through the current lesson + one ahead
   const currentIdx = orderedLessons.findIndex((l) => l.id === lessonId);
-  const firstIncompleteIdx = orderedLessons.findIndex((l) => !completedIds.has(l.id));
-  const accessibleUpTo = Math.max(currentIdx, firstIncompleteIdx);
+  const firstIncompleteIdx = orderedLessons.findIndex(
+    (l) => !completedIds.has(l.id),
+  );
+  const accessibleUpTo =
+    firstIncompleteIdx === -1 ? orderedLessons.length - 1 : firstIncompleteIdx;
+  if (currentIdx > accessibleUpTo)
+    redirect(
+      `/dashboard/courses/${slug}/lessons/${orderedLessons[accessibleUpTo].id}`,
+    );
 
   return (
     <LessonPageLayout
@@ -77,7 +90,7 @@ export default async function LessonDetailPage({
           id: m.id,
           title: m.title,
           order: m.order,
-          lessons: m.lessons.map((l, _) => {
+          lessons: m.lessons.map((l) => {
             const idx = orderedLessons.findIndex((ol) => ol.id === l.id);
             return {
               id: l.id,
@@ -85,7 +98,7 @@ export default async function LessonDetailPage({
               order: l.order,
               isCompleted: completedIds.has(l.id),
               isCurrent: l.id === lessonId,
-              isLocked: idx > accessibleUpTo + 1,
+              isLocked: idx > accessibleUpTo,
             };
           }),
         })),
