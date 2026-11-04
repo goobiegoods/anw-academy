@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { getAcademicAccessContext } from "@/lib/academic-access";
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace("#", "");
@@ -13,24 +14,18 @@ export const dynamic = "force-dynamic";
 export default async function DiscussionsPage() {
   const user = await getCurrentUser();
 
-  const enrolledCourseIds = user
-    ? (
-        await prisma.enrollment.findMany({
-          where: { userId: user.id },
-          select: { courseId: true },
-        })
-      ).map((e) => e.courseId)
-    : [];
+  const access = user ? await getAcademicAccessContext(user.id) : null;
+  const enrolledCourseIds = access ? [...access.courseIds] : [];
 
-  const discussions = await prisma.discussion.findMany({
-    where: enrolledCourseIds.length ? { courseId: { in: enrolledCourseIds } } : {},
+  const discussions = enrolledCourseIds.length > 0 ? await prisma.discussion.findMany({
+    where: { courseId: { in: enrolledCourseIds } },
     include: {
       course: { include: { school: true } },
       posts: { select: { id: true, userId: true } },
     },
     orderBy: { id: "asc" },
     take: 20,
-  });
+  }) : [];
 
   return (
     <div className="space-y-8">

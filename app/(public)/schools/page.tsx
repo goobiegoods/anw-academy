@@ -1,3 +1,4 @@
+import { catalogSchools } from "@/lib/catalog";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
@@ -46,13 +47,15 @@ const SCHOOL_META: Record<
 };
 
 export default async function SchoolsPage() {
-  const schools = await prisma.school.findMany({
-    orderBy: { order: "asc" },
-    include: {
-      departments: true,
-      courses: { orderBy: { order: "asc" } },
-    },
-  });
+  const schools = process.env.DATABASE_URL
+    ? await prisma.school.findMany({
+        orderBy: { order: "asc" },
+        include: {
+          departments: true,
+          courses: { orderBy: { order: "asc" } },
+        },
+      })
+    : catalogSchools;
 
   return (
     <div className="w-full bg-[#f5f1ea]">
@@ -118,7 +121,10 @@ export default async function SchoolsPage() {
                   <span className="block w-8 h-px bg-[#e8b45a] mt-5" />
                 </div>
                 <div className="flex flex-col justify-center">
-                  <p className="text-[12.5px] text-white/75" style={{ lineHeight: 1.8 }}>
+                  <p
+                    className="text-[12.5px] text-white/75"
+                    style={{ lineHeight: 1.8 }}
+                  >
                     {school.description}
                   </p>
                   <div className="flex flex-wrap gap-2 mt-4">
@@ -165,7 +171,10 @@ export default async function SchoolsPage() {
                   </p>
                   <ul className="space-y-1.5">
                     {school.departments.map((dept) => (
-                      <li key={dept.id} className="text-[12.5px] text-[#6b6459]">
+                      <li
+                        key={dept.id}
+                        className="text-[12.5px] text-[#6b6459]"
+                      >
                         {dept.name}
                       </li>
                     ))}
@@ -176,7 +185,10 @@ export default async function SchoolsPage() {
                     <p className="uppercase tracking-[0.2em] text-[9px] font-bold text-[#c9923a] mb-3">
                       Certification &amp; WU
                     </p>
-                    <p className="text-[12.5px] text-[#6b6459]" style={{ lineHeight: 1.7 }}>
+                    <p
+                      className="text-[12.5px] text-[#6b6459]"
+                      style={{ lineHeight: 1.7 }}
+                    >
                       {school.courses.length} courses ·{" "}
                       {school.courses.reduce((n, c) => n + c.wuValue, 0)} WU
                       available · counts toward the school certificate and the

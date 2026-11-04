@@ -1,7 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Check, X, Home, BookOpen, Bookmark, User, ArrowLeft } from "lucide-react";
+import React, { useState, useMemo, useCallback } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  X,
+  Home,
+  BookOpen,
+  Bookmark,
+  User,
+  ArrowLeft,
+} from "lucide-react";
 import Link from "next/link";
 import LessonCourseSidebar from "./LessonCourseSidebar";
 import LessonJumpNav from "./LessonJumpNav";
@@ -17,7 +27,8 @@ import type {
   ClinicalCard,
   ReflectionCard,
 } from "@/lib/lesson-types";
-import { correctIndex } from "@/lib/lesson-types";
+import { useRouter } from "next/navigation";
+import { correctIndex, selectFinalQuizQuestions } from "@/lib/lesson-types";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -61,15 +72,50 @@ type Props = {
 // ─── Section definitions ──────────────────────────────────────────────────────
 
 const SECTION_DEFS = [
-  { id: "overview",     label: "Lesson Overview",         types: [] as string[], inNav: false },
-  { id: "objectives",   label: "Learning Objectives",     types: ["objectives"],              inNav: true },
-  { id: "key-terms",    label: "Key Terms",               types: ["vocabulary"],              inNav: true },
-  { id: "core-concepts",label: "Core Concepts",           types: ["hook", "teaching"],        inNav: true },
-  { id: "historical",   label: "Historical Perspective",  types: ["deeper"],                  inNav: true },
-  { id: "insight",      label: "Practitioner Insight",    types: ["quote"],                   inNav: true },
-  { id: "application",  label: "Real-World Application",  types: ["clinical"],                inNav: true },
-  { id: "takeaways",    label: "Key Takeaways",           types: ["quiz"],                    inNav: true },
-  { id: "reflection",   label: "Reflection & Integration",types: ["reflection"],              inNav: true },
+  {
+    id: "overview",
+    label: "Lesson Overview",
+    types: [] as string[],
+    inNav: false,
+  },
+  {
+    id: "objectives",
+    label: "Learning Objectives",
+    types: ["objectives"],
+    inNav: true,
+  },
+  { id: "key-terms", label: "Key Terms", types: ["vocabulary"], inNav: true },
+  {
+    id: "core-concepts",
+    label: "Core Concepts",
+    types: ["hook", "teaching"],
+    inNav: true,
+  },
+  {
+    id: "historical",
+    label: "Historical Perspective",
+    types: ["deeper"],
+    inNav: true,
+  },
+  {
+    id: "insight",
+    label: "Practitioner Insight",
+    types: ["quote"],
+    inNav: true,
+  },
+  {
+    id: "application",
+    label: "Real-World Application",
+    types: ["clinical"],
+    inNav: true,
+  },
+  { id: "takeaways", label: "Key Takeaways", types: ["quiz"], inNav: true },
+  {
+    id: "reflection",
+    label: "Reflection & Integration",
+    types: ["reflection"],
+    inNav: true,
+  },
 ];
 
 // ─── Botanical hero ───────────────────────────────────────────────────────────
@@ -98,20 +144,99 @@ function BotanicalHero({
 
   return (
     <div className="relative w-full h-[180px] rounded-2xl overflow-hidden mb-6">
-      <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #fdf6e8 0%, #eedcb8 100%)" }} />
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 900 180" preserveAspectRatio="xMidYMid slice">
-        <ellipse cx="90" cy="65" rx="130" ry="52" fill={color} fillOpacity="0.07" transform="rotate(-25 90 65)" />
-        <ellipse cx="75" cy="155" rx="95" ry="38" fill={color} fillOpacity="0.055" transform="rotate(15 75 155)" />
-        <ellipse cx="810" cy="45" rx="145" ry="58" fill={color} fillOpacity="0.08" transform="rotate(30 810 45)" />
-        <ellipse cx="830" cy="160" rx="105" ry="42" fill={color} fillOpacity="0.06" transform="rotate(-15 830 160)" />
-        <ellipse cx="450" cy="90" rx="155" ry="72" fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.18" />
-        <ellipse cx="450" cy="90" rx="144" ry="64" fill="none" stroke={color} strokeWidth="0.5" strokeOpacity="0.1" />
-        <path d="M320 170 Q390 120 450 90" stroke={color} strokeWidth="1" fill="none" strokeOpacity="0.1" />
-        <path d="M580 170 Q510 120 450 90" stroke={color} strokeWidth="1" fill="none" strokeOpacity="0.1" />
+      <div
+        className="absolute inset-0"
+        style={{
+          background: "linear-gradient(135deg, #fdf6e8 0%, #eedcb8 100%)",
+        }}
+      />
+      <svg
+        className="absolute inset-0 w-full h-full"
+        viewBox="0 0 900 180"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <ellipse
+          cx="90"
+          cy="65"
+          rx="130"
+          ry="52"
+          fill={color}
+          fillOpacity="0.07"
+          transform="rotate(-25 90 65)"
+        />
+        <ellipse
+          cx="75"
+          cy="155"
+          rx="95"
+          ry="38"
+          fill={color}
+          fillOpacity="0.055"
+          transform="rotate(15 75 155)"
+        />
+        <ellipse
+          cx="810"
+          cy="45"
+          rx="145"
+          ry="58"
+          fill={color}
+          fillOpacity="0.08"
+          transform="rotate(30 810 45)"
+        />
+        <ellipse
+          cx="830"
+          cy="160"
+          rx="105"
+          ry="42"
+          fill={color}
+          fillOpacity="0.06"
+          transform="rotate(-15 830 160)"
+        />
+        <ellipse
+          cx="450"
+          cy="90"
+          rx="155"
+          ry="72"
+          fill="none"
+          stroke={color}
+          strokeWidth="1"
+          strokeOpacity="0.18"
+        />
+        <ellipse
+          cx="450"
+          cy="90"
+          rx="144"
+          ry="64"
+          fill="none"
+          stroke={color}
+          strokeWidth="0.5"
+          strokeOpacity="0.1"
+        />
+        <path
+          d="M320 170 Q390 120 450 90"
+          stroke={color}
+          strokeWidth="1"
+          fill="none"
+          strokeOpacity="0.1"
+        />
+        <path
+          d="M580 170 Q510 120 450 90"
+          stroke={color}
+          strokeWidth="1"
+          fill="none"
+          strokeOpacity="0.1"
+        />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-4xl block mb-1.5" style={{ filter: "saturate(0.75) brightness(0.82)" }}>{icon}</span>
-        <p className="text-[10px] uppercase tracking-[0.22em] font-bold" style={{ color: `${color}99` }}>
+        <span
+          className="text-4xl block mb-1.5"
+          style={{ filter: "saturate(0.75) brightness(0.82)" }}
+        >
+          {icon}
+        </span>
+        <p
+          className="text-[10px] uppercase tracking-[0.22em] font-bold"
+          style={{ color: `${color}99` }}
+        >
           Botanical Illustration
         </p>
       </div>
@@ -132,7 +257,10 @@ function SectionEyebrow({ number, label }: { number: number; label: string }) {
 // ─── Inline quiz question ─────────────────────────────────────────────────────
 
 function InlineQuestion({
-  q, qIdx, answers, onAnswer,
+  q,
+  qIdx,
+  answers,
+  onAnswer,
 }: {
   q: QuizQuestion;
   qIdx: number;
@@ -145,23 +273,40 @@ function InlineQuestion({
 
   return (
     <div className="bg-white border border-[#e2ddd5] rounded-xl p-5 mb-4">
-      <p className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#6b6459] mb-2">Check Your Understanding</p>
+      <p className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#6b6459] mb-2">
+        Check Your Understanding
+      </p>
       <p className="font-semibold text-[#1a1a1a] mb-4 leading-snug">{q.q}</p>
       <div className="space-y-2">
         {q.opts.map((opt, i) => {
-          let cls = "w-full flex items-start gap-3 p-3 rounded-lg border text-sm text-left transition-colors ";
-          if (!revealed) cls += "border-[#e2ddd5] hover:border-[#4a7c59] hover:bg-[#f0f7f3] cursor-pointer";
+          let cls =
+            "w-full flex items-start gap-3 p-3 rounded-lg border text-sm text-left transition-colors ";
+          if (!revealed)
+            cls +=
+              "border-[#e2ddd5] hover:border-[#4a7c59] hover:bg-[#f0f7f3] cursor-pointer";
           else if (i === correct) cls += "border-[#4a7c59] bg-[#f0f7f3]";
           else if (i === selected) cls += "border-red-300 bg-red-50";
           else cls += "border-[#e2ddd5] opacity-50";
           return (
-            <button key={i} className={cls} disabled={revealed} onClick={() => onAnswer(qIdx, i)}>
+            <button
+              key={i}
+              className={cls}
+              disabled={revealed}
+              onClick={() => onAnswer(qIdx, i)}
+            >
               <span className="flex-shrink-0 w-5 h-5 rounded-full border border-current flex items-center justify-center text-[10px] font-bold">
                 {String.fromCharCode(65 + i)}
               </span>
               <span className="flex-1 leading-snug">{opt}</span>
-              {revealed && i === correct && <Check size={14} className="flex-shrink-0 text-[#4a7c59] mt-0.5" />}
-              {revealed && i === selected && i !== correct && <X size={14} className="flex-shrink-0 text-red-500 mt-0.5" />}
+              {revealed && i === correct && (
+                <Check
+                  size={14}
+                  className="flex-shrink-0 text-[#4a7c59] mt-0.5"
+                />
+              )}
+              {revealed && i === selected && i !== correct && (
+                <X size={14} className="flex-shrink-0 text-red-500 mt-0.5" />
+              )}
             </button>
           );
         })}
@@ -169,7 +314,9 @@ function InlineQuestion({
       {revealed && (
         <div className="mt-3 p-3 bg-[#f5f1ea] rounded-lg">
           <p className="text-[12px] text-[#3a3530] leading-relaxed">
-            <span className="font-semibold">{selected === correct ? "Correct! " : "Not quite. "}</span>
+            <span className="font-semibold">
+              {selected === correct ? "Correct! " : "Not quite. "}
+            </span>
             {q.explanation}
           </p>
         </div>
@@ -181,7 +328,12 @@ function InlineQuestion({
 // ─── Final quiz ───────────────────────────────────────────────────────────────
 
 function FinalQuiz({
-  questions, answers, onAnswer, onRetry, onComplete, passedNow,
+  questions,
+  answers,
+  onAnswer,
+  onRetry,
+  onComplete,
+  passedNow,
 }: {
   questions: QuizQuestion[];
   answers: Map<number, number>;
@@ -191,28 +343,52 @@ function FinalQuiz({
   passedNow: boolean;
 }) {
   const allAnswered = questions.every((_, i) => answers.has(i));
-  const allCorrect = questions.every((q, i) => answers.get(i) === correctIndex(q));
+  const allCorrect = questions.every(
+    (q, i) => answers.get(i) === correctIndex(q),
+  );
 
   return (
     <div>
       {questions.map((q, i) => (
-        <InlineQuestion key={i} q={q} qIdx={i} answers={answers} onAnswer={onAnswer} />
+        <InlineQuestion
+          key={i}
+          q={q}
+          qIdx={i}
+          answers={answers}
+          onAnswer={onAnswer}
+        />
       ))}
       {allAnswered && !passedNow && (
-        <div className={`rounded-xl p-5 text-center ${allCorrect ? "bg-[#f0f7f3] border border-[#4a7c59]/30" : "bg-[#fdf3ec] border border-[#c9923a]/30"}`}>
+        <div
+          className={`rounded-xl p-5 text-center ${allCorrect ? "bg-[#f0f7f3] border border-[#4a7c59]/30" : "bg-[#fdf3ec] border border-[#c9923a]/30"}`}
+        >
           {allCorrect ? (
             <>
-              <p className="font-playfair text-xl font-bold text-[#2d5240] mb-1">Excellent work!</p>
-              <p className="text-sm text-[#4a7c59] mb-4">You answered all questions correctly.</p>
-              <button onClick={onComplete} className="bg-[#2d5240] text-white font-medium px-6 py-2.5 rounded-lg hover:bg-[#1d3a2c] transition-colors">
+              <p className="font-playfair text-xl font-bold text-[#2d5240] mb-1">
+                Excellent work!
+              </p>
+              <p className="text-sm text-[#4a7c59] mb-4">
+                You answered all questions correctly.
+              </p>
+              <button
+                onClick={onComplete}
+                className="bg-[#2d5240] text-white font-medium px-6 py-2.5 rounded-lg hover:bg-[#1d3a2c] transition-colors"
+              >
                 Complete Lesson
               </button>
             </>
           ) : (
             <>
-              <p className="font-semibold text-[#3a3530] mb-1">Keep studying!</p>
-              <p className="text-sm text-[#6b6459] mb-4">Review the material above and try again.</p>
-              <button onClick={onRetry} className="bg-[#c9923a] text-white font-medium px-6 py-2.5 rounded-lg hover:bg-[#a97832] transition-colors">
+              <p className="font-semibold text-[#3a3530] mb-1">
+                Keep studying!
+              </p>
+              <p className="text-sm text-[#6b6459] mb-4">
+                Review the material above and try again.
+              </p>
+              <button
+                onClick={onRetry}
+                className="bg-[#c9923a] text-white font-medium px-6 py-2.5 rounded-lg hover:bg-[#a97832] transition-colors"
+              >
                 Try Again
               </button>
             </>
@@ -222,8 +398,12 @@ function FinalQuiz({
       {passedNow && (
         <div className="rounded-xl p-6 bg-[#2d5240] text-center">
           <p className="text-3xl mb-2">🌿</p>
-          <p className="font-playfair text-2xl font-bold text-white mb-1">Lesson Complete!</p>
-          <p className="text-white/70 text-sm">You&apos;ve earned Wellness Units for completing this lesson.</p>
+          <p className="font-playfair text-2xl font-bold text-white mb-1">
+            Lesson Complete!
+          </p>
+          <p className="text-white/70 text-sm">
+            You&apos;ve earned Wellness Units for completing this lesson.
+          </p>
         </div>
       )}
     </div>
@@ -240,7 +420,9 @@ function renderObjectives(card: ObjectivesCard) {
           <span className="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full bg-[#4a7c59] flex items-center justify-center">
             <Check size={10} className="text-white" strokeWidth={3} />
           </span>
-          <span className="text-[15px] text-[#3a3530] leading-relaxed">{item}</span>
+          <span className="text-[15px] text-[#3a3530] leading-relaxed">
+            {item}
+          </span>
         </li>
       ))}
     </ul>
@@ -251,11 +433,18 @@ function renderVocabulary(card: VocabularyCard) {
   return (
     <div className="space-y-4">
       {card.terms.map((term, i) => (
-        <div key={i} className="flex gap-4 p-4 rounded-xl bg-white border border-[#e2ddd5]">
+        <div
+          key={i}
+          className="flex gap-4 p-4 rounded-xl bg-white border border-[#e2ddd5]"
+        >
           <div className="w-1 flex-shrink-0 rounded-full bg-[#4a7c59] self-stretch" />
           <div>
-            <p className="font-playfair font-bold text-[#1a1a1a] mb-0.5">{term.name}</p>
-            <p className="text-sm text-[#6b6459] leading-relaxed">{term.definition}</p>
+            <p className="font-playfair font-bold text-[#1a1a1a] mb-0.5">
+              {term.name}
+            </p>
+            <p className="text-sm text-[#6b6459] leading-relaxed">
+              {term.definition}
+            </p>
           </div>
         </div>
       ))}
@@ -270,13 +459,22 @@ function renderCoreConcepts(cards: (HookCard | TeachingCard)[]) {
         if (card.type === "hook") {
           return (
             <div key={i}>
-              <h3 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-1">{card.title}</h3>
+              <h3 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-1">
+                {card.title}
+              </h3>
               {card.subtitle && (
-                <p className="text-[13px] uppercase tracking-[0.1em] text-[#c9923a] mb-4">{card.subtitle}</p>
+                <p className="text-[13px] uppercase tracking-[0.1em] text-[#c9923a] mb-4">
+                  {card.subtitle}
+                </p>
               )}
               <div>
                 {card.body.split("\n\n").map((para, j) => (
-                  <p key={j} className="text-[15px] text-[#3a3530] leading-[1.85] mb-4">{para}</p>
+                  <p
+                    key={j}
+                    className="text-[15px] text-[#3a3530] leading-[1.85] mb-4"
+                  >
+                    {para}
+                  </p>
                 ))}
               </div>
             </div>
@@ -285,10 +483,17 @@ function renderCoreConcepts(cards: (HookCard | TeachingCard)[]) {
         if (card.type === "teaching") {
           return (
             <div key={i}>
-              <h3 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-4">{card.title}</h3>
+              <h3 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-4">
+                {card.title}
+              </h3>
               <div>
                 {card.body.split("\n\n").map((para, j) => (
-                  <p key={j} className="text-[15px] text-[#3a3530] leading-[1.85] mb-4">{para}</p>
+                  <p
+                    key={j}
+                    className="text-[15px] text-[#3a3530] leading-[1.85] mb-4"
+                  >
+                    {para}
+                  </p>
                 ))}
               </div>
             </div>
@@ -303,10 +508,17 @@ function renderCoreConcepts(cards: (HookCard | TeachingCard)[]) {
 function renderDeeper(card: DeeperCard) {
   return (
     <div className="bg-[#f9f6f0] rounded-2xl p-6 border border-[#e8e0d0]">
-      <h3 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-4">{card.title}</h3>
+      <h3 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-4">
+        {card.title}
+      </h3>
       <div>
         {card.body.split("\n\n").map((para, i) => (
-          <p key={i} className="text-[15px] text-[#3a3530] leading-[1.85] mb-4 last:mb-0">{para}</p>
+          <p
+            key={i}
+            className="text-[15px] text-[#3a3530] leading-[1.85] mb-4 last:mb-0"
+          >
+            {para}
+          </p>
         ))}
       </div>
     </div>
@@ -318,7 +530,9 @@ function renderPractitionerInsight(card: QuoteCard) {
   return (
     <div className="space-y-5">
       <div className="border-l-4 border-[#4a7c9e] bg-[#f5f9fc] rounded-r-xl pl-5 pr-4 py-4">
-        <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#4a7c9e] mb-2">Practitioner Insight</p>
+        <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#4a7c9e] mb-2">
+          Practitioner Insight
+        </p>
         <blockquote className="font-playfair text-lg italic text-[#1a1a1a] leading-relaxed mb-2">
           &ldquo;{card.quote}&rdquo;
         </blockquote>
@@ -327,7 +541,12 @@ function renderPractitionerInsight(card: QuoteCard) {
       {card.context && (
         <div>
           {card.context.split("\n\n").map((para, i) => (
-            <p key={i} className="text-[15px] text-[#3a3530] leading-[1.85] mb-4 last:mb-0">{para}</p>
+            <p
+              key={i}
+              className="text-[15px] text-[#3a3530] leading-[1.85] mb-4 last:mb-0"
+            >
+              {para}
+            </p>
           ))}
         </div>
       )}
@@ -339,12 +558,21 @@ function renderClinical(card: ClinicalCard) {
   return (
     <div className="space-y-5">
       <div className="bg-[#fdf6e8] border border-[#e8d9b8] rounded-xl p-5">
-        <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#c9923a] mb-2">Clinical Scenario</p>
-        <p className="text-[15px] text-[#3a3530] leading-relaxed italic">{card.scenario}</p>
+        <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#c9923a] mb-2">
+          Clinical Scenario
+        </p>
+        <p className="text-[15px] text-[#3a3530] leading-relaxed italic">
+          {card.scenario}
+        </p>
       </div>
       <div>
         {card.body.split("\n\n").map((para, i) => (
-          <p key={i} className="text-[15px] text-[#3a3530] leading-[1.85] mb-4 last:mb-0">{para}</p>
+          <p
+            key={i}
+            className="text-[15px] text-[#3a3530] leading-[1.85] mb-4 last:mb-0"
+          >
+            {para}
+          </p>
         ))}
       </div>
     </div>
@@ -355,18 +583,28 @@ function renderClinical(card: ClinicalCard) {
 function renderTakeaways(
   card: QuizCard,
   inlineAnswers: Map<number, number>,
-  handleInlineAnswer: (qIdx: number, optIdx: number) => void
+  handleInlineAnswer: (qIdx: number, optIdx: number) => void,
 ) {
   return (
     <div className="space-y-5">
       {card.title && (
         <div className="border-l-4 border-[#4a7c59] bg-[#f0f7f3] rounded-r-xl pl-5 pr-4 py-4">
-          <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#4a7c59] mb-1.5">Key Takeaway</p>
-          <p className="text-[15px] text-[#1a1a1a] leading-relaxed">{card.title}</p>
+          <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#4a7c59] mb-1.5">
+            Key Takeaway
+          </p>
+          <p className="text-[15px] text-[#1a1a1a] leading-relaxed">
+            {card.title}
+          </p>
         </div>
       )}
       {card.questions.map((q, i) => (
-        <InlineQuestion key={i} q={q} qIdx={i} answers={inlineAnswers} onAnswer={handleInlineAnswer} />
+        <InlineQuestion
+          key={i}
+          q={q}
+          qIdx={i}
+          answers={inlineAnswers}
+          onAnswer={handleInlineAnswer}
+        />
       ))}
     </div>
   );
@@ -375,19 +613,43 @@ function renderTakeaways(
 // ─── Mobile bottom tab bar ────────────────────────────────────────────────────
 
 function MobileTabBar() {
-  const tabs: { href: string; Icon: React.ComponentType<{ size: number; className: string }>; label: string; active?: boolean }[] = [
-    { href: "/dashboard",         Icon: Home,     label: "Home"    },
-    { href: "/dashboard/courses", Icon: BookOpen, label: "Courses", active: true },
-    { href: "/dashboard",         Icon: Bookmark, label: "Library" },
-    { href: "/dashboard",         Icon: User,     label: "Profile" },
+  const tabs: {
+    href: string;
+    Icon: React.ComponentType<{ size: number; className: string }>;
+    label: string;
+    active?: boolean;
+  }[] = [
+    { href: "/dashboard", Icon: Home, label: "Home" },
+    {
+      href: "/dashboard/courses",
+      Icon: BookOpen,
+      label: "Courses",
+      active: true,
+    },
+    { href: "/dashboard/resources", Icon: Bookmark, label: "Library" },
+    { href: "/dashboard/profile", Icon: User, label: "Profile" },
   ];
 
   return (
-    <div className="flex-shrink-0 bg-white border-t border-[#e2ddd5] flex" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+    <div
+      className="flex-shrink-0 bg-white border-t border-[#e2ddd5] flex"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       {tabs.map(({ href, Icon, label, active }) => (
-        <Link key={label} href={href} className="flex-1 flex flex-col items-center py-2.5 gap-0.5">
-          <Icon size={20} className={active ? "text-[#2d5240]" : "text-[#6b6459]"} />
-          <span className={`text-[10px] ${active ? "text-[#2d5240] font-medium" : "text-[#6b6459]"}`}>{label}</span>
+        <Link
+          key={label}
+          href={href}
+          className="flex-1 flex flex-col items-center py-2.5 gap-0.5"
+        >
+          <Icon
+            size={20}
+            className={active ? "text-[#2d5240]" : "text-[#6b6459]"}
+          />
+          <span
+            className={`text-[10px] ${active ? "text-[#2d5240] font-medium" : "text-[#6b6459]"}`}
+          >
+            {label}
+          </span>
         </Link>
       ))}
     </div>
@@ -396,13 +658,28 @@ function MobileTabBar() {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function LessonPageLayout({ course, lesson, userId, lessonIndex, totalLessons }: Props) {
+export default function LessonPageLayout({
+  course,
+  lesson,
+  userId,
+  lessonIndex,
+  totalLessons,
+}: Props) {
   const [mode, setMode] = useState<"read" | "swipe">("read");
   const [swipeIdx, setSwipeIdx] = useState(0);
-  const [mobileScreen, setMobileScreen] = useState<"entry" | "content">("entry");
-  const [inlineAnswers, setInlineAnswers] = useState<Map<number, number>>(new Map());
-  const [finalPool, setFinalPool] = useState<QuizQuestion[]>([]);
-  const [finalAnswers, setFinalAnswers] = useState<Map<number, number>>(new Map());
+  const [mobileScreen, setMobileScreen] = useState<"entry" | "content">(
+    "entry",
+  );
+  const [inlineAnswers, setInlineAnswers] = useState<Map<number, number>>(
+    new Map(),
+  );
+  const [attempt, setAttempt] = useState(0);
+  const [completionError, setCompletionError] = useState("");
+  const [completionPending, setCompletionPending] = useState(false);
+  const router = useRouter();
+  const [finalAnswers, setFinalAnswers] = useState<Map<number, number>>(
+    new Map(),
+  );
   const [passedNow, setPassedNow] = useState(false);
 
   const cards = lesson.content.cards;
@@ -415,49 +692,76 @@ export default function LessonPageLayout({ course, lesson, userId, lessonIndex, 
   }, [cards]);
 
   // Nav sections exclude overview
-  const navSections = useMemo(() => sections.filter((s) => s.inNav), [sections]);
+  const navSections = useMemo(
+    () => sections.filter((s) => s.inNav),
+    [sections],
+  );
 
-  useEffect(() => {
-    const reflection = cards.find((c) => c.type === "reflection") as ReflectionCard | undefined;
-    if (reflection?.quizQuestions?.length) {
-      const shuffled = [...reflection.quizQuestions].sort(() => Math.random() - 0.5);
-      setFinalPool(shuffled.slice(0, 3));
-    }
-  }, [lesson.id, cards]);
-
+  const reflection = cards.find(
+    (c): c is ReflectionCard => c.type === "reflection",
+  );
+  const finalPool = selectFinalQuizQuestions(
+    reflection?.quizQuestions || [],
+    attempt,
+  );
   const retryFinal = useCallback(() => {
-    const reflection = cards.find((c) => c.type === "reflection") as ReflectionCard | undefined;
-    if (reflection?.quizQuestions?.length) {
-      const shuffled = [...reflection.quizQuestions].sort(() => Math.random() - 0.5);
-      setFinalPool(shuffled.slice(0, 3));
-      setFinalAnswers(new Map());
-    }
-  }, [cards]);
-
+    setAttempt((value) => value + 1);
+    setFinalAnswers(new Map());
+    setCompletionError("");
+  }, []);
   const handleComplete = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || completionPending) return;
+    setCompletionPending(true);
+    setCompletionError("");
     try {
-      await fetch("/api/lessons/complete", {
+      const response = await fetch("/api/lessons/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lessonId: lesson.id }),
+        body: JSON.stringify({
+          lessonId: lesson.id,
+          attempt,
+          answers: Object.fromEntries(finalAnswers),
+        }),
       });
-    } catch { /* non-blocking */ }
-    setPassedNow(true);
-  }, [lesson.id, userId]);
+      const result = await response.json();
+      if (!response.ok || !result.completed)
+        throw new Error(result.error || "Review your answers and try again.");
+      setPassedNow(true);
+      router.refresh();
+    } catch (error) {
+      setCompletionError(
+        error instanceof Error
+          ? error.message
+          : "Could not record this lesson.",
+      );
+    } finally {
+      setCompletionPending(false);
+    }
+  }, [lesson.id, userId, attempt, finalAnswers, completionPending, router]);
 
   const handleInlineAnswer = useCallback((qIdx: number, optIdx: number) => {
-    setInlineAnswers((prev) => { const m = new Map(prev); m.set(qIdx, optIdx); return m; });
+    setInlineAnswers((prev) => {
+      const m = new Map(prev);
+      m.set(qIdx, optIdx);
+      return m;
+    });
   }, []);
 
   const handleFinalAnswer = useCallback((qIdx: number, optIdx: number) => {
-    setFinalAnswers((prev) => { const m = new Map(prev); m.set(qIdx, optIdx); return m; });
+    setFinalAnswers((prev) => {
+      const m = new Map(prev);
+      m.set(qIdx, optIdx);
+      return m;
+    });
   }, []);
 
   const allLessons = course.modules.flatMap((m) => m.lessons);
   const completedCount = allLessons.filter((l) => l.isCompleted).length;
-  const pct = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
-  const objCard = cards.find((c) => c.type === "objectives") as ObjectivesCard | undefined;
+  const pct =
+    totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+  const objCard = cards.find((c) => c.type === "objectives") as
+    | ObjectivesCard
+    | undefined;
 
   // Section number: 1-indexed among nav sections (overview has no number)
   function getSectionNum(section: (typeof SECTION_DEFS)[number]) {
@@ -493,17 +797,29 @@ export default function LessonPageLayout({ course, lesson, userId, lessonIndex, 
               Foundation
             </span>
           </div>
-          <BotanicalHero color={course.school.color} icon={course.school.icon} heroImageUrl={lesson.heroImageUrl} />
+          <BotanicalHero
+            color={course.school.color}
+            icon={course.school.icon}
+            heroImageUrl={lesson.heroImageUrl}
+          />
           {objCard && (
             <div className="mt-6 p-5 bg-white border border-[#e2ddd5] rounded-xl">
-              <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#6b6459] mb-3">What You Will Learn</p>
+              <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#6b6459] mb-3">
+                What You Will Learn
+              </p>
               <ul className="space-y-2">
                 {objCard.items.map((item, i) => (
                   <li key={i} className="flex items-start gap-2.5">
                     <span className="flex-shrink-0 w-4 h-4 mt-0.5 rounded-full bg-[#4a7c59]/15 flex items-center justify-center">
-                      <Check size={8} className="text-[#4a7c59]" strokeWidth={3} />
+                      <Check
+                        size={8}
+                        className="text-[#4a7c59]"
+                        strokeWidth={3}
+                      />
                     </span>
-                    <span className="text-sm text-[#3a3530] leading-snug">{item}</span>
+                    <span className="text-sm text-[#3a3530] leading-snug">
+                      {item}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -519,14 +835,27 @@ export default function LessonPageLayout({ course, lesson, userId, lessonIndex, 
     return (
       <div>
         <SectionEyebrow number={num} label={section.label} />
-        <h2 className="font-playfair text-2xl font-bold text-[#1a1a1a] mb-6">{section.label}</h2>
-        {section.id === "objectives"    && renderObjectives(sectionCards[0] as ObjectivesCard)}
-        {section.id === "key-terms"     && renderVocabulary(sectionCards[0] as VocabularyCard)}
-        {section.id === "core-concepts" && renderCoreConcepts(sectionCards as (HookCard | TeachingCard)[])}
-        {section.id === "historical"    && renderDeeper(sectionCards[0] as DeeperCard)}
-        {section.id === "insight"       && renderPractitionerInsight(sectionCards[0] as QuoteCard)}
-        {section.id === "application"   && renderClinical(sectionCards[0] as ClinicalCard)}
-        {section.id === "takeaways"     && renderTakeaways(sectionCards[0] as QuizCard, inlineAnswers, handleInlineAnswer)}
+        <h2 className="font-playfair text-2xl font-bold text-[#1a1a1a] mb-6">
+          {section.label}
+        </h2>
+        {section.id === "objectives" &&
+          renderObjectives(sectionCards[0] as ObjectivesCard)}
+        {section.id === "key-terms" &&
+          renderVocabulary(sectionCards[0] as VocabularyCard)}
+        {section.id === "core-concepts" &&
+          renderCoreConcepts(sectionCards as (HookCard | TeachingCard)[])}
+        {section.id === "historical" &&
+          renderDeeper(sectionCards[0] as DeeperCard)}
+        {section.id === "insight" &&
+          renderPractitionerInsight(sectionCards[0] as QuoteCard)}
+        {section.id === "application" &&
+          renderClinical(sectionCards[0] as ClinicalCard)}
+        {section.id === "takeaways" &&
+          renderTakeaways(
+            sectionCards[0] as QuizCard,
+            inlineAnswers,
+            handleInlineAnswer,
+          )}
         {section.id === "reflection" && (
           <div className="space-y-6">
             <div className="bg-[#f9f6f0] border border-[#e8e0d0] rounded-xl p-5">
@@ -534,6 +863,12 @@ export default function LessonPageLayout({ course, lesson, userId, lessonIndex, 
                 {(sectionCards[0] as ReflectionCard).prompt}
               </p>
             </div>
+            <p role="status" className="text-sm text-red-700">
+              {completionError}
+            </p>
+            {completionPending && (
+              <p role="status">Recording your assessment…</p>
+            )}
             {finalPool.length > 0 && (
               <FinalQuiz
                 questions={finalPool}
@@ -569,7 +904,9 @@ export default function LessonPageLayout({ course, lesson, userId, lessonIndex, 
       <div className="mb-6">
         <div className="flex items-center justify-between text-[11px] text-[#6b6459] mb-1.5">
           <span>{sections[swipeIdx]?.label}</span>
-          <span>{swipeIdx + 1} / {sections.length}</span>
+          <span>
+            {swipeIdx + 1} / {sections.length}
+          </span>
         </div>
         <div className="h-1 bg-[#e2ddd5] rounded-full overflow-hidden">
           <div
@@ -591,7 +928,9 @@ export default function LessonPageLayout({ course, lesson, userId, lessonIndex, 
         </button>
         {swipeIdx < sections.length - 1 ? (
           <button
-            onClick={() => setSwipeIdx((i) => Math.min(sections.length - 1, i + 1))}
+            onClick={() =>
+              setSwipeIdx((i) => Math.min(sections.length - 1, i + 1))
+            }
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white transition-colors"
             style={{ backgroundColor: course.school.color }}
           >
@@ -618,21 +957,35 @@ export default function LessonPageLayout({ course, lesson, userId, lessonIndex, 
           {course.school.name} · Level {course.level}
         </p>
         <div className="h-1.5 bg-[#e2ddd5] rounded-full overflow-hidden">
-          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: "#4a7c59" }} />
+          <div
+            className="h-full rounded-full transition-all"
+            style={{ width: `${pct}%`, backgroundColor: "#4a7c59" }}
+          />
         </div>
       </div>
       <div className="px-5 pt-5 pb-4">
-        <h1 className="font-playfair text-2xl font-bold text-[#1a1a1a] mb-1">{lesson.title}</h1>
-        <p className="text-sm text-[#6b6459]">{course.estimatedHours * 60} min</p>
+        <h1 className="font-playfair text-2xl font-bold text-[#1a1a1a] mb-1">
+          {lesson.title}
+        </h1>
+        <p className="text-sm text-[#6b6459]">
+          {course.estimatedHours * 60} min
+        </p>
       </div>
       {objCard && (
         <div className="mx-5 mb-6 p-4 bg-[#f5f1ea] rounded-xl">
-          <p className="text-[12px] font-bold text-[#3a3530] mb-3">What you&apos;ll learn</p>
+          <p className="text-[12px] font-bold text-[#3a3530] mb-3">
+            What you&apos;ll learn
+          </p>
           <ul className="space-y-2">
             {objCard.items.map((item, i) => (
               <li key={i} className="flex items-start gap-2.5">
-                <Check size={14} className="flex-shrink-0 mt-0.5 text-[#4a7c59]" />
-                <span className="text-[13px] text-[#3a3530] leading-snug">{item}</span>
+                <Check
+                  size={14}
+                  className="flex-shrink-0 mt-0.5 text-[#4a7c59]"
+                />
+                <span className="text-[13px] text-[#3a3530] leading-snug">
+                  {item}
+                </span>
               </li>
             ))}
           </ul>
@@ -640,7 +993,10 @@ export default function LessonPageLayout({ course, lesson, userId, lessonIndex, 
       )}
       <div className="px-5 pb-6">
         <button
-          onClick={() => { setSwipeIdx(0); setMobileScreen("content"); }}
+          onClick={() => {
+            setSwipeIdx(0);
+            setMobileScreen("content");
+          }}
           className="w-full py-4 rounded-xl text-white font-semibold text-base"
           style={{ backgroundColor: "#2d5240" }}
         >
@@ -655,11 +1011,16 @@ export default function LessonPageLayout({ course, lesson, userId, lessonIndex, 
   const mobileContent = (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="px-5 py-3 border-b border-[#e2ddd5] flex items-center gap-3 flex-shrink-0">
-        <button onClick={() => setMobileScreen("entry")} className="text-[#6b6459] flex-shrink-0">
+        <button
+          onClick={() => setMobileScreen("entry")}
+          className="text-[#6b6459] flex-shrink-0"
+        >
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] text-[#6b6459] truncate">{sections[swipeIdx]?.label}</p>
+          <p className="text-[11px] text-[#6b6459] truncate">
+            {sections[swipeIdx]?.label}
+          </p>
           <div className="h-1 bg-[#e2ddd5] rounded-full mt-1 overflow-hidden">
             <div
               className="h-full bg-[#4a7c59] rounded-full transition-all"
@@ -667,7 +1028,9 @@ export default function LessonPageLayout({ course, lesson, userId, lessonIndex, 
             />
           </div>
         </div>
-        <span className="text-[11px] text-[#6b6459] flex-shrink-0">{swipeIdx + 1}/{sections.length}</span>
+        <span className="text-[11px] text-[#6b6459] flex-shrink-0">
+          {swipeIdx + 1}/{sections.length}
+        </span>
       </div>
       <div className="flex-1 overflow-y-auto px-5 py-6">
         {sections[swipeIdx] && renderSectionContent(sections[swipeIdx])}
@@ -713,7 +1076,10 @@ export default function LessonPageLayout({ course, lesson, userId, lessonIndex, 
       </div>
 
       {/* ── DESKTOP: 3-column layout ── */}
-      <div className="-mx-6 -my-8 hidden lg:flex" style={{ backgroundColor: "#faf8f4" }}>
+      <div
+        className="-mx-6 -my-8 hidden lg:flex"
+        style={{ backgroundColor: "#faf8f4" }}
+      >
         {/* Left: course nav sidebar */}
         <aside
           className="w-64 flex-shrink-0 flex flex-col border-r border-[#e2ddd5] sticky top-0 overflow-y-auto"

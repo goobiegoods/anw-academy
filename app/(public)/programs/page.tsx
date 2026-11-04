@@ -1,3 +1,4 @@
+import { CERTIFICATIONS } from "@/prisma/curriculum/certifications";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
@@ -12,9 +13,11 @@ const LEVEL_LABELS: Record<number, string> = {
 };
 
 export default async function ProgramsPage() {
-  const certifications = await prisma.certification.findMany({
-    orderBy: [{ level: "asc" }, { requiredWU: "asc" }],
-  });
+  const certifications = process.env.DATABASE_URL
+    ? await prisma.certification.findMany({
+        orderBy: [{ level: "asc" }, { requiredWU: "asc" }],
+      })
+    : CERTIFICATIONS.map((c, i) => ({ ...c, id: `program-${i}` }));
 
   return (
     <div className="w-full bg-[#faf8f4]">
@@ -124,7 +127,10 @@ export default async function ProgramsPage() {
           ))}
         </div>
 
-        <p className="text-center text-[11px] text-[#9a9088] max-w-2xl mx-auto mt-16" style={{ lineHeight: 1.8 }}>
+        <p
+          className="text-center text-[11px] text-[#9a9088] max-w-2xl mx-auto mt-16"
+          style={{ lineHeight: 1.8 }}
+        >
           ANW certifications recognize completion of educational programs in
           natural wellness. They are educational credentials, not medical
           licenses. Graduates practice as wellness educators within the scope

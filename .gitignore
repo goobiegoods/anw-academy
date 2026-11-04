@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# Disposable local journey-test build caches
+/.next-journeys*/

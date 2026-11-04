@@ -15,7 +15,10 @@ function VerifiedBadge() {
   return (
     <div
       className="inline-flex items-center gap-2.5 px-7 py-3 rounded-full"
-      style={{ backgroundColor: "rgba(45,82,64,0.1)", border: "1.5px solid #2d5240" }}
+      style={{
+        backgroundColor: "rgba(45,82,64,0.1)",
+        border: "1.5px solid #2d5240",
+      }}
     >
       <span
         className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[13px] font-bold"
@@ -23,14 +26,25 @@ function VerifiedBadge() {
       >
         ✓
       </span>
-      <span className="font-playfair font-bold text-xl" style={{ color: "#2d5240" }}>
+      <span
+        className="font-playfair font-bold text-xl"
+        style={{ color: "#2d5240" }}
+      >
         VERIFIED
       </span>
     </div>
   );
 }
 
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Row({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-6 py-3 border-b border-[#e8e0d0] last:border-0">
       <span className="text-[11px] uppercase tracking-[0.15em] font-semibold text-[#8a7a6a] flex-shrink-0">
@@ -52,7 +66,20 @@ export default async function VerifyPage({
   params: Promise<{ code: string }>;
 }) {
   const { code } = await params;
-  const decoded = decodeURIComponent(code);
+  if (!process.env.DATABASE_URL)
+    return (
+      <div className="max-w-xl mx-auto px-6 py-20 text-center">
+        <AcademySeal size="md" variant="dark" />
+        <h1 className="font-playfair text-3xl mt-6">
+          Certificate Verification
+        </h1>
+        <p className="mt-5">
+          The registrar connection is unavailable on this preview. No
+          certificate validity determination has been made.
+        </p>
+      </div>
+    );
+  const decoded = code;
 
   // 1. Try as a certificate number
   const cert = await prisma.studentCertification.findUnique({
@@ -79,7 +106,9 @@ export default async function VerifyPage({
         },
       });
 
-  const found = (cert && cert.status === "awarded") || (student && student.certifications.length > 0);
+  const found =
+    (cert && cert.status === "awarded") ||
+    (student && student.certifications.length > 0);
 
   return (
     <div className="w-full bg-[#faf8f4] min-h-[70vh] py-20">
@@ -97,7 +126,10 @@ export default async function VerifyPage({
 
             <div
               className="w-full mt-8 rounded-2xl px-7 py-5 text-left"
-              style={{ backgroundColor: "#F5F0E8", border: `1px solid rgba(212,169,74,0.4)` }}
+              style={{
+                backgroundColor: "#F5F0E8",
+                border: `1px solid rgba(212,169,74,0.4)`,
+              }}
             >
               {cert ? (
                 <>
@@ -107,12 +139,20 @@ export default async function VerifyPage({
                     label="Date Awarded"
                     value={cert.awardedAt ? formatDate(cert.awardedAt) : "—"}
                   />
-                  <Row label="Certificate No." value={cert.certificateNumber ?? decoded} mono />
+                  <Row
+                    label="Certificate No."
+                    value={cert.certificateNumber ?? decoded}
+                    mono
+                  />
                 </>
               ) : student ? (
                 <>
                   <Row label="Student" value={student.name} />
-                  <Row label="Student No." value={student.studentId ?? decoded} mono />
+                  <Row
+                    label="Student No."
+                    value={student.studentId ?? decoded}
+                    mono
+                  />
                   {student.certifications.map((sc) => (
                     <Row
                       key={sc.id}
@@ -135,8 +175,8 @@ export default async function VerifyPage({
                 Natura Sanat, Sapientia Docet
               </p>
               <p className="text-[13px] text-[#6b6459] mt-4 max-w-sm leading-relaxed">
-                This certification has been verified as authentic by the Academy of Natural
-                Wellness.
+                This certification has been verified as authentic by the Academy
+                of Natural Wellness.
               </p>
               <p className="text-[10px] uppercase tracking-[0.25em] text-[#9a9088] mt-5">
                 Est. 2026
@@ -147,7 +187,10 @@ export default async function VerifyPage({
           <>
             <div
               className="mt-8 inline-flex items-center gap-2.5 px-7 py-3 rounded-full"
-              style={{ backgroundColor: "#f0ece4", border: "1.5px solid #c8c0b0" }}
+              style={{
+                backgroundColor: "#f0ece4",
+                border: "1.5px solid #c8c0b0",
+              }}
             >
               <span className="font-playfair font-bold text-lg text-[#6b6459]">
                 Certificate Not Found

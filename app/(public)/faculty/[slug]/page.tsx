@@ -17,6 +17,7 @@ export default async function FacultyProfilePage({
 }) {
   const { slug } = await params;
 
+  if (!process.env.DATABASE_URL) notFound();
   const faculty = await prisma.faculty.findUnique({ where: { slug } });
   if (!faculty || !faculty.isActive) notFound();
 
@@ -28,7 +29,10 @@ export default async function FacultyProfilePage({
     faculty.coursesTaught.length
       ? prisma.course.findMany({
           where: {
-            OR: [{ slug: { in: faculty.coursesTaught } }, { id: { in: faculty.coursesTaught } }],
+            OR: [
+              { slug: { in: faculty.coursesTaught } },
+              { id: { in: faculty.coursesTaught } },
+            ],
           },
           include: { school: { select: { name: true, color: true } } },
           orderBy: { order: "asc" },
@@ -59,15 +63,24 @@ export default async function FacultyProfilePage({
             ) : (
               <div
                 className="w-32 h-32 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: "rgba(212,169,74,0.15)", border: `4px solid ${GOLD}` }}
+                style={{
+                  backgroundColor: "rgba(212,169,74,0.15)",
+                  border: `4px solid ${GOLD}`,
+                }}
               >
-                <span className="font-playfair font-bold text-4xl" style={{ color: GOLD }}>
+                <span
+                  className="font-playfair font-bold text-4xl"
+                  style={{ color: GOLD }}
+                >
                   {getInitials(faculty.name)}
                 </span>
               </div>
             )}
             <div className="min-w-0">
-              <h1 className="font-playfair text-4xl md:text-5xl font-bold" style={{ color: "#F3ECDA" }}>
+              <h1
+                className="font-playfair text-4xl md:text-5xl font-bold"
+                style={{ color: "#F3ECDA" }}
+              >
                 {faculty.name}
               </h1>
               <p className="font-playfair italic text-[16px] text-white/65 mt-1.5">
@@ -98,13 +111,18 @@ export default async function FacultyProfilePage({
       <div className="max-w-4xl mx-auto px-6 py-14 space-y-12">
         {/* ── Bio ────────────────────────────────────────────────────── */}
         <div className="prose prose-sm max-w-none text-[14px] text-[#3a3028] leading-relaxed [&>p]:mb-4">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{faculty.bio}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {faculty.bio}
+          </ReactMarkdown>
         </div>
 
         {/* ── Specializations ────────────────────────────────────────── */}
         {faculty.specializations.length > 0 && (
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3" style={{ color: "#8a6b30" }}>
+            <p
+              className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3"
+              style={{ color: "#8a6b30" }}
+            >
               Specializations
             </p>
             <div className="flex flex-wrap gap-2">
@@ -123,7 +141,10 @@ export default async function FacultyProfilePage({
         {/* ── Teaches In ─────────────────────────────────────────────── */}
         {schools.length > 0 && (
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3" style={{ color: "#8a6b30" }}>
+            <p
+              className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3"
+              style={{ color: "#8a6b30" }}
+            >
               Teaches In
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -144,7 +165,10 @@ export default async function FacultyProfilePage({
         {/* ── Curricula ──────────────────────────────────────────────── */}
         {courses.length > 0 && (
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3" style={{ color: "#8a6b30" }}>
+            <p
+              className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3"
+              style={{ color: "#8a6b30" }}
+            >
               Curricula
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -153,7 +177,10 @@ export default async function FacultyProfilePage({
                   key={c.id}
                   className="bg-white border border-[#e2ddd5] rounded-xl overflow-hidden"
                 >
-                  <div className="h-1" style={{ backgroundColor: c.school.color }} />
+                  <div
+                    className="h-1"
+                    style={{ backgroundColor: c.school.color }}
+                  />
                   <div className="px-5 py-4">
                     <p className="text-[10px] uppercase tracking-[0.15em] text-[#9a9088] mb-1">
                       {c.school.name.replace("School of ", "")}

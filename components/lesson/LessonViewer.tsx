@@ -5,6 +5,7 @@ import {
   CARD_TYPE_LABELS,
   correctIndex,
   parseLessonContent,
+  selectFinalQuizQuestions,
   type LessonCard,
   type QuizQuestion,
 } from "@/lib/lesson-types";
@@ -131,37 +132,39 @@ function FinalQuiz({
   wuValue: number;
   alreadyCompleted: boolean;
   passedNow: boolean;
-  onPassed: (score: number, answers: Record<number, number>) => void;
+  onPassed: (answers: Record<number, number>, attempt: number) => Promise<boolean>;
 }) {
   const [attempt, setAttempt] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [result, setResult] = useState<{ score: number; passed: boolean } | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState("");
 
   // Rotate which 3 questions are shown on each retake
-  const questions = useMemo(() => {
-    if (pool.length <= 3) return pool;
-    const out: QuizQuestion[] = [];
-    for (let i = 0; i < 3; i++) {
-      out.push(pool[(attempt * 3 + i) % pool.length]);
-    }
-    return out;
-  }, [pool, attempt]);
+  const questions = useMemo(() => selectFinalQuizQuestions(pool, attempt), [pool, attempt]);
 
   const allAnswered = questions.every((_, i) => answers[i] !== undefined);
   const done = passedNow || alreadyCompleted;
 
-  const submit = () => {
+  const submit = async () => {
     const correct = questions.filter((q, i) => answers[i] === correctIndex(q)).length;
     const score = Math.round((correct / questions.length) * 100);
     const passed = score >= 70;
     setResult({ score, passed });
-    if (passed) onPassed(score, answers);
+    if (passed) {
+      setSubmitting(true);
+      setSubmissionError("");
+      const accepted = await onPassed(answers, attempt);
+      setSubmitting(false);
+      if (!accepted) setSubmissionError("The Academy could not verify this attempt. Please try again.");
+    }
   };
 
   const retake = () => {
     setAttempt((a) => a + 1);
     setAnswers({});
     setResult(null);
+    setSubmissionError("");
   };
 
   if (done) {
@@ -257,7 +260,22 @@ function FinalQuiz({
         >
           Submit Final Quiz
         </button>
-      ) : result.passed ? null : (
+      ) : result.passed ? (
+        <div className="text-center">
+          <p className="text-[13px] font-semibold text-[#2d5240]">
+            {submitting ? "Verifying your assessment…" : submissionError || "Assessment verified."}
+          </p>
+          {submissionError ? (
+            <button
+              onClick={retake}
+              className="mt-4 w-full text-white font-semibold py-3.5 rounded-full min-h-[44px]"
+              style={{ backgroundColor: schoolColor }}
+            >
+              Try Again
+            </button>
+          ) : null}
+        </div>
+      ) : (
         <div className="text-center">
           <p className="text-[14px] font-semibold text-[#7c2a2a] mb-1">
             {result.score}% — you need 70% to pass.
@@ -293,7 +311,7 @@ function CardBody({
   wuValue: number;
   alreadyCompleted: boolean;
   passedNow: boolean;
-  onPassed: (score: number, answers: Record<number, number>) => void;
+  onPassed: (answers: Record<number, number>, attempt: number) => Promise<boolean>;
 }) {
   switch (card.type) {
     case "objectives":
@@ -489,13 +507,6 @@ export default function LessonViewer({
   const touchDeltaX = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Default to swipe mode on mobile (< 768px)
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      setMode("swipe");
-    }
-  }, []);
-
   // Lock body scroll while the viewer is open
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -531,17 +542,21 @@ export default function LessonViewer({
   };
 
   const handlePassed = useCallback(
-    async (score: number, answers: Record<number, number>) => {
-      setPassedNow(true);
+    async (answers: Record<number, number>, attempt: number) => {
       try {
-        await fetch("/api/lessons/complete", {
+        const response = await fetch("/api/lessons/complete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lessonId, score, answers }),
+          body: JSON.stringify({ lessonId, attempt, answers }),
         });
+        if (!response.ok) return false;
+        const result = await response.json();
+        if (!result.passed) return false;
+        setPassedNow(true);
         onCompleted?.();
+        return true;
       } catch {
-        // Completion is retried next time the lesson quiz is passed
+        return false;
       }
     },
     [lessonId, onCompleted]

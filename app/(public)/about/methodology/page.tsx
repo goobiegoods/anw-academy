@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AcademySeal from "@/components/ui/academy-seal";
+import { EVIDENCE_LEVELS } from "@/lib/academy-2.0/evidence-standard";
 
 export const metadata = {
   title: "Curriculum Methodology — Academy of Natural Wellness",
@@ -63,6 +64,44 @@ export default function MethodologyPage() {
             How the Academy builds curricula, counts credit, and stands behind its diplomas.
           </p>
         </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-6 pt-16">
+        <section aria-labelledby="evidence-standard-title">
+          <div className="max-w-3xl">
+            <span className="block w-8 h-1 rounded-full mb-4" style={{ backgroundColor: GOLD }} />
+            <p className="text-[10px] uppercase tracking-[0.22em] font-bold text-[#8a6b30]">
+              The ANW Evidence Standard
+            </p>
+            <h2 id="evidence-standard-title" className="font-playfair text-3xl font-bold text-[#1a1a1a] mt-2">
+              Learn the claim—and the kind of knowing behind it.
+            </h2>
+            <p className="text-[14px] text-[#4a4238] leading-[1.9] mt-4">
+              Academy 2.0 does not flatten science, tradition, early research, and theory into one voice.
+              We teach each seriously, label it clearly, and show where different frameworks agree,
+              conflict, or remain uncertain.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+            {EVIDENCE_LEVELS.map((level, index) => (
+              <article
+                key={level.label}
+                className={`bg-white rounded-2xl border border-[#e2ddd5] p-6 ${index === EVIDENCE_LEVELS.length - 1 ? "md:col-span-2" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: level.color }} />
+                  <h3 className="font-playfair text-lg font-bold text-[#1a1a1a]">{level.label}</h3>
+                </div>
+                <p className="text-[13px] text-[#4a4238] leading-relaxed mt-3">{level.description}</p>
+                <p className="text-[11.5px] text-[#8a7a6a] leading-relaxed mt-3">
+                  <span className="font-semibold uppercase tracking-[0.08em]">For example:</span>{" "}
+                  {level.example}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
 
       <div className="max-w-3xl mx-auto px-6 py-16 space-y-10">

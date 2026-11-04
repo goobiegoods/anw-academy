@@ -182,7 +182,7 @@ export default function CourseContent({ course, completedLessonIds, taughtBy }: 
                       </span>
                       <span className="block text-[11px] text-[#9a9088] mt-0.5">
                         {done
-                          ? "Mastered — review anytime"
+                          ? "Completed — review anytime"
                           : unlocked
                           ? `10 cards · ${lesson.wuValue} WU on completion`
                           : "Prerequisite Required — complete the previous lesson"}

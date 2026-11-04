@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Bot } from "lucide-react";
+import { ChevronRight, Bot, Network } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -36,7 +36,7 @@ export default async function ReadingRoomPage() {
     );
   }
 
-  const [enrollments, completedProgress, recentDiscoveries, schools] = await Promise.all([
+  const [enrollments, completedProgress, recentDiscoveries, schools, announcements] = await Promise.all([
     prisma.enrollment.findMany({
       where: { userId: user.id },
       include: {
@@ -73,6 +73,11 @@ export default async function ReadingRoomPage() {
     prisma.school.findMany({
       orderBy: { order: "asc" },
       include: { _count: { select: { courses: true } } },
+    }),
+    prisma.announcement.findMany({
+      where: { audience: { in: ["all", "students"] } },
+      orderBy: { createdAt: "desc" },
+      take: 2,
     }),
   ]);
 
@@ -153,6 +158,23 @@ export default async function ReadingRoomPage() {
         </p>
       </div>
 
+      {announcements.length > 0 && (
+        <section aria-labelledby="reading-room-notices" className="rounded-2xl border border-[#ded7cb] bg-white px-6 py-5">
+          <div className="flex items-center justify-between gap-4">
+            <h2 id="reading-room-notices" className="font-playfair text-lg font-bold text-[#1C3327]">Academy notices</h2>
+            <Link href="/dashboard/student-life" className="text-[12px] font-medium text-[#4a7c59] hover:underline">Student Life →</Link>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {announcements.map((announcement) => (
+              <article key={announcement.id} className="rounded-xl bg-[#f7f3eb] px-4 py-3">
+                <p className="text-[12px] font-semibold text-[#1a1a1a]">{announcement.title}</p>
+                <p className="mt-1 line-clamp-2 text-[11px] leading-5 text-[#6b6459]">{announcement.body}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── 3. Current Studies ──────────────────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-4">
@@ -199,7 +221,7 @@ export default async function ReadingRoomPage() {
                   />
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-[#8a7a6a] mb-4">
-                  <span>{doneCount}/{lessons.length} lessons mastered</span>
+                  <span>{doneCount}/{lessons.length} lessons completed</span>
                   <span>
                     {lastStudied
                       ? `Last studied ${lastStudied.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
@@ -225,7 +247,32 @@ export default async function ReadingRoomPage() {
         )}
       </div>
 
-      {/* ── 4. Recent Discoveries ───────────────────────────────────────── */}
+      {/* ── 4. Human Body Atlas ──────────────────────────────────────────── */}
+      <Link href="/dashboard/atlas" className="group block">
+        <div className="overflow-hidden rounded-[20px] border border-[#d8d0c3] bg-white transition-shadow hover:shadow-[0_8px_28px_rgba(28,51,39,0.1)]">
+          <div className="grid sm:grid-cols-[1fr_auto] sm:items-center">
+            <div className="p-6 sm:p-7">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e7efe9] text-[#2d6245]">
+                  <Network size={19} aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#9b7a38]">Academy 2.0 · New study layer</p>
+                  <h2 className="font-playfair text-xl font-bold text-[#1C3327]">Human Body Atlas</h2>
+                </div>
+              </div>
+              <p className="mt-4 max-w-2xl text-[13px] leading-6 text-[#6b6459]">
+                See how anatomy, physiology, evidence, traditions, safety, labs, and the six schools connect. Begin with the lymphatic system.
+              </p>
+            </div>
+            <div className="border-t border-[#eee8de] bg-[#f5f0e8] px-6 py-4 text-[12px] font-bold text-[#1C3327] sm:h-full sm:min-w-[190px] sm:border-l sm:border-t-0 sm:px-7 sm:py-0 sm:flex sm:items-center sm:justify-center">
+              Open the Atlas <ChevronRight size={14} className="ml-1 inline transition-transform group-hover:translate-x-1" aria-hidden="true" />
+            </div>
+          </div>
+        </div>
+      </Link>
+
+      {/* ── 5. Recent Discoveries ───────────────────────────────────────── */}
       {recentDiscoveries.length > 0 && (
         <div>
           <h2 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-4">Recent Discoveries</h2>

@@ -1,6 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isAdminEmail } from "@/lib/admin-emails";
 
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -8,6 +7,13 @@ export async function updateSession(request: NextRequest) {
   try {
     let supabaseResponse = NextResponse.next({ request });
 
+    const redirectWithCookies = (url: URL) => {
+      const response = NextResponse.redirect(url);
+      for (const cookie of supabaseResponse.cookies.getAll())
+        response.cookies.set(cookie);
+      response.headers.set("Cache-Control", "private, no-store");
+      return response;
+    };
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -18,15 +24,15 @@ export async function updateSession(request: NextRequest) {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value)
+              request.cookies.set(name, value),
             );
             supabaseResponse = NextResponse.next({ request });
             cookiesToSet.forEach(({ name, value, options }) =>
-              supabaseResponse.cookies.set(name, value, options)
+              supabaseResponse.cookies.set(name, value, options),
             );
           },
         },
-      }
+      },
     );
 
     const {
@@ -39,17 +45,12 @@ export async function updateSession(request: NextRequest) {
       if (!user) {
         const url = request.nextUrl.clone();
         url.pathname = "/login";
-        return NextResponse.redirect(url);
-      }
-      if (!isAdminEmail(user.email)) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/dashboard";
-        return NextResponse.redirect(url);
+        return redirectWithCookies(url);
       }
       // Prevent Vercel's edge CDN from caching admin responses
       supabaseResponse.headers.set(
         "Cache-Control",
-        "no-store, no-cache, must-revalidate, max-age=0, private"
+        "no-store, no-cache, must-revalidate, max-age=0, private",
       );
       supabaseResponse.headers.set("CDN-Cache-Control", "no-store");
       supabaseResponse.headers.set("Vercel-CDN-Cache-Control", "no-store");
@@ -62,13 +63,17 @@ export async function updateSession(request: NextRequest) {
     if (!user && isProtected) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
-      return NextResponse.redirect(url);
+      return redirectWithCookies(url);
     }
 
     return supabaseResponse;
   } catch {
     // If session verification fails on a protected path, redirect to login
-    if (pathname.startsWith("/admin") || pathname.startsWith("/dashboard") || pathname.startsWith("/practitioner")) {
+    if (
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/practitioner")
+    ) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       return NextResponse.redirect(url);

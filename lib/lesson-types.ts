@@ -98,6 +98,32 @@ export function correctIndex(q: QuizQuestion): number {
   return q.correct.toLowerCase().charCodeAt(0) - 97;
 }
 
+export function selectFinalQuizQuestions(pool: QuizQuestion[], attempt: number): QuizQuestion[] {
+  if (pool.length <= 3) return pool;
+
+  const safeAttempt = Number.isInteger(attempt) && attempt >= 0 ? attempt : 0;
+  return Array.from({ length: 3 }, (_, index) => pool[(safeAttempt * 3 + index) % pool.length]);
+}
+
+export function gradeLessonFinal(
+  content: string,
+  attempt: number,
+  answers: Record<string, number>
+): { score: number; passed: boolean; correct: number; total: number } | null {
+  const parsed = parseLessonContent(content);
+  const reflection = parsed?.cards.find((card): card is ReflectionCard => card.type === "reflection");
+  if (!reflection || reflection.quizQuestions.length === 0) return null;
+
+  const questions = selectFinalQuizQuestions(reflection.quizQuestions, attempt);
+  const complete = questions.every((_, index) => Number.isInteger(answers[String(index)]));
+  const correct = complete
+    ? questions.filter((question, index) => answers[String(index)] === correctIndex(question)).length
+    : 0;
+  const score = questions.length ? Math.round((correct / questions.length) * 100) : 0;
+
+  return { score, passed: complete && score >= 70, correct, total: questions.length };
+}
+
 export function parseLessonContent(content: string): LessonContent | null {
   try {
     const parsed = JSON.parse(content);

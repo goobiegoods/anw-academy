@@ -6,12 +6,16 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:academic-integrity": "ts-node --project tsconfig.verify.json scripts/verify-academic-integrity.ts",
+    "test:academic-domain": "ts-node --project tsconfig.verify.json scripts/verify-academic-domain.ts",
+    "test:journeys": "node scripts/verify-isolated-journeys.mjs",
+    "test:request-security": "ts-node --project tsconfig.verify.json scripts/verify-request-security.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.102.0",
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
     "@radix-ui/react-slot": "^1.2.5",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.0",
@@ -21,12 +25,12 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "lucide-react": "^1.17.0",
-    "next": "16.2.7",
+    "next": "16.4.5",
     "next-themes": "^0.4.6",
     "openai": "^6.44.0",
     "pdfkit": "^0.19.1",
     "pg": "^8.21.0",
-    "prisma": "^7.8.0",
+    "prisma": "7.10.1",
     "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -38,6 +42,8 @@
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.4.1",
+    "@electric-sql/pglite-socket": "^0.1.1",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20.19.42",
@@ -45,7 +51,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.7",
+    "eslint-config-next": "16.4.5",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5"

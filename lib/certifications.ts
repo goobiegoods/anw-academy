@@ -1,62 +1,108 @@
+import { Prisma } from "@prisma/client";
+import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
-import { formatCertificateNumber } from "@/lib/student-id";
-
-/**
- * Awards any certifications whose requirements the student now meets:
- * WU threshold, approved case studies, and (if required) an approved capstone.
- * Idempotent — already-awarded certifications are left untouched.
- */
+import { HttpError } from "@/lib/http";
+/** Explicit registrar operation only. No GET/page render can issue a credential. */
 export async function checkAndAwardCertifications(userId: string) {
-  const [user, profile, certifications, existing, approvedCaseStudies, approvedCapstones] =
-    await Promise.all([
-      prisma.user.findUnique({ where: { id: userId }, select: { studentId: true } }),
-      prisma.studentProfile.findUnique({ where: { userId } }),
-      prisma.certification.findMany({ orderBy: { level: "asc" } }),
-      prisma.studentCertification.findMany({ where: { userId } }),
-      prisma.caseStudy.count({ where: { userId, status: "approved" } }),
-      prisma.capstone.count({ where: { userId, status: "approved" } }),
-    ]);
-
-  if (!profile) return;
-
-  const byCertId = new Map(existing.map((sc) => [sc.certificationId, sc]));
-  let numbered = existing.filter((sc) => sc.certificateNumber).length;
-
-  for (const cert of certifications) {
-    const current = byCertId.get(cert.id);
-    if (current?.status === "awarded") continue;
-
-    const meetsWU = profile.totalWU >= cert.requiredWU;
-    const meetsCaseStudies = approvedCaseStudies >= cert.requiredCaseStudies;
-    const meetsCapstone = !cert.requiredCapstone || approvedCapstones > 0;
-    if (!meetsWU || !meetsCaseStudies || !meetsCapstone) continue;
-
-    numbered += 1;
-    const certificateNumber = user?.studentId
-      ? formatCertificateNumber(user.studentId, numbered)
-      : null;
-
-    if (current) {
-      await prisma.studentCertification.update({
-        where: { id: current.id },
-        data: {
+  return prisma.$transaction(
+    async (tx) => {
+      const [
+        profile,
+        user,
+        certifications,
+        existing,
+        lessons,
+        cases,
+        capstones,
+        ledger,
+      ] = await Promise.all([
+        tx.studentProfile.findUnique({ where: { userId } }),
+        tx.user.findUnique({ where: { id: userId } }),
+        tx.certification.findMany({ orderBy: { level: "asc" } }),
+        tx.studentCertification.findMany({ where: { userId } }),
+        tx.lessonProgress.findMany({
+          where: { userId, completed: true },
+          select: { lessonId: true },
+        }),
+        tx.caseStudy.count({ where: { userId, status: "approved" } }),
+        tx.capstone.count({ where: { userId, status: "approved" } }),
+        tx.wellnessUnitTransaction.aggregate({
+          where: { userId },
+          _sum: { amount: true },
+        }),
+      ]);
+      if (!profile || !user?.studentId)
+        throw new HttpError(
+          409,
+          "A student identity and academic profile are required.",
+        );
+      if (profile.totalWU !== (ledger._sum.amount || 0))
+        throw new HttpError(
+          409,
+          "Reconcile this student's WU ledger before issuing credentials.",
+        );
+      const slugs = [
+        ...new Set(certifications.flatMap((c) => c.requiredCourses)),
+      ];
+      const courses = await tx.course.findMany({
+        where: { slug: { in: slugs } },
+        include: {
+          modules: { include: { lessons: { select: { id: true } } } },
+        },
+      });
+      const completed = new Set(lessons.map((l) => l.lessonId));
+      const completedCourses = new Set(
+        courses
+          .filter((c) => {
+            const ids = c.modules.flatMap((m) => m.lessons.map((l) => l.id));
+            return ids.length > 0 && ids.every((id) => completed.has(id));
+          })
+          .map((c) => c.slug),
+      );
+      const awarded: string[] = [],
+        blocked: string[] = [];
+      for (const cert of certifications) {
+        if (
+          existing.some(
+            (c) => c.certificationId === cert.id && c.status === "awarded",
+          )
+        )
+          continue;
+        if (!cert.requiredCourses.length) {
+          blocked.push(
+            `${cert.title}: required coursework has not been configured`,
+          );
+          continue;
+        }
+        if (
+          profile.totalWU < cert.requiredWU ||
+          !cert.requiredCourses.every((slug) => completedCourses.has(slug)) ||
+          cases < cert.requiredCaseStudies ||
+          (cert.requiredCapstone && capstones === 0)
+        )
+          continue;
+        const current = existing.find((c) => c.certificationId === cert.id);
+        const data = {
           status: "awarded",
           progressPercent: 100,
           awardedAt: new Date(),
-          certificateNumber: current.certificateNumber ?? certificateNumber,
-        },
-      });
-    } else {
-      await prisma.studentCertification.create({
-        data: {
-          userId,
-          certificationId: cert.id,
-          status: "awarded",
-          progressPercent: 100,
-          awardedAt: new Date(),
-          certificateNumber,
-        },
-      });
-    }
-  }
+          certificateNumber:
+            current?.certificateNumber ||
+            `ANW-${new Date().getFullYear()}-${randomUUID().replaceAll("-", "").slice(0, 20).toUpperCase()}`,
+        };
+        if (current)
+          await tx.studentCertification.update({
+            where: { id: current.id },
+            data,
+          });
+        else
+          await tx.studentCertification.create({
+            data: { userId, certificationId: cert.id, ...data },
+          });
+        awarded.push(cert.title);
+      }
+      return { awarded, blocked };
+    },
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+  );
 }

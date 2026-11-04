@@ -6,6 +6,8 @@ const statusStyles: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700 border-amber-200",
   submitted: "bg-purple-50 text-purple-700 border-purple-200",
   under_review: "bg-blue-50 text-blue-700 border-blue-200",
+  revision_requested: "bg-amber-50 text-amber-700 border-amber-200",
+  approved: "bg-green-50 text-green-700 border-green-200",
   accepted: "bg-green-50 text-green-700 border-green-200",
   rejected: "bg-red-50 text-red-700 border-red-200",
   waitlisted: "bg-yellow-50 text-yellow-700 border-yellow-200",

@@ -15,7 +15,11 @@ type Post = {
   schoolColor: string;
 };
 
-export default function DiscussionsModerator({ initialPosts }: { initialPosts: Post[] }) {
+export default function DiscussionsModerator({
+  initialPosts,
+}: {
+  initialPosts: Post[];
+}) {
   const [posts, setPosts] = useState(initialPosts);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
@@ -28,7 +32,9 @@ export default function DiscussionsModerator({ initialPosts }: { initialPosts: P
     setDeleting(id);
     setConfirm(null);
     try {
-      const res = await fetch(`/api/admin/discussions/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/discussions/${id}`, {
+        method: "DELETE",
+      });
       if (res.ok) {
         setPosts((prev) => prev.filter((p) => p.id !== id));
       }
@@ -41,8 +47,12 @@ export default function DiscussionsModerator({ initialPosts }: { initialPosts: P
     return (
       <div className="bg-white border border-[#e2ddd5] rounded-[16px] p-10 text-center">
         <MessageSquare size={32} className="mx-auto mb-3 text-[#c8bfb0]" />
-        <p className="font-playfair text-lg font-bold text-[#1a1a1a] mb-1">No posts yet</p>
-        <p className="text-sm text-[#6b6459]">Discussion posts will appear here once students start participating.</p>
+        <p className="font-playfair text-lg font-bold text-[#1a1a1a] mb-1">
+          No posts yet
+        </p>
+        <p className="text-sm text-[#6b6459]">
+          Discussion posts will appear here once students start participating.
+        </p>
       </div>
     );
   }
@@ -58,9 +68,13 @@ export default function DiscussionsModerator({ initialPosts }: { initialPosts: P
             <div className="flex-1 min-w-0">
               {/* Meta row */}
               <div className="flex items-center gap-2 flex-wrap mb-2">
-                <span className="text-[11px] font-semibold text-[#1a1a1a]">{post.author.name}</span>
+                <span className="text-[11px] font-semibold text-[#1a1a1a]">
+                  {post.author.name}
+                </span>
                 <span className="text-[10px] text-[#8a7a6a]">·</span>
-                <span className="text-[10px] text-[#8a7a6a]">{post.author.email}</span>
+                <span className="text-[10px] text-[#8a7a6a]">
+                  {post.author.email}
+                </span>
                 {post.isReply && (
                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#f0ece4] text-[#8a7a6a]">
                     reply
@@ -68,19 +82,28 @@ export default function DiscussionsModerator({ initialPosts }: { initialPosts: P
                 )}
                 <span className="text-[10px] text-[#b0a090]">
                   {new Date(post.createdAt).toLocaleDateString("en-US", {
-                    month: "short", day: "numeric", year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
                   })}
                 </span>
               </div>
 
               {/* Discussion context */}
-              <p className="text-[10px] uppercase tracking-[0.12em] font-semibold mb-1" style={{ color: post.schoolColor }}>
+              <p
+                className="text-[10px] uppercase tracking-[0.12em] font-semibold mb-1"
+                style={{ color: post.schoolColor }}
+              >
                 {post.schoolName} · {post.courseName}
               </p>
-              <p className="text-[11px] text-[#6b6459] italic mb-2">"{post.discussionTitle}"</p>
+              <p className="text-[11px] text-[#6b6459] italic mb-2">
+                &ldquo;{post.discussionTitle}&rdquo;
+              </p>
 
               {/* Post content */}
-              <p className="text-[13px] text-[#1a1a1a] leading-relaxed">{post.content}</p>
+              <p className="text-[13px] text-[#1a1a1a] leading-relaxed">
+                {post.content}
+              </p>
             </div>
 
             {/* Delete button */}
@@ -95,7 +118,11 @@ export default function DiscussionsModerator({ initialPosts }: { initialPosts: P
                 } disabled:opacity-50`}
               >
                 <Trash2 size={13} />
-                {deleting === post.id ? "Deleting…" : confirm === post.id ? "Confirm delete" : "Delete"}
+                {deleting === post.id
+                  ? "Deleting…"
+                  : confirm === post.id
+                    ? "Confirm delete"
+                    : "Delete"}
               </button>
               {confirm === post.id && (
                 <button

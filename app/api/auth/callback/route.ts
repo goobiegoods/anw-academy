@@ -1,16 +1,24 @@
+import { safeInternalPath } from "@/lib/request-policy";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { ensureAcademyUser } from "@/lib/user-provisioning";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
+  const requestedNext = searchParams.get("next") ?? "/dashboard";
+  const next = safeInternalPath(requestedNext);
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error) {
+    if (!error && data.user) {
+      try {
+        await ensureAcademyUser(data.user);
+      } catch {
+        return NextResponse.redirect(`${origin}/login?error=academy-profile`);
+      }
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

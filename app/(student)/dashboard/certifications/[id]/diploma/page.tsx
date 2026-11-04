@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { formatCertificateNumber } from "@/lib/student-id";
 import AcademySeal from "@/components/ui/academy-seal";
 import DiplomaQR from "@/components/dashboard/DiplomaQR";
 import DocumentActions from "@/components/dashboard/DocumentActions";
@@ -15,9 +14,21 @@ const GOLD = "#D4A94A";
 /** Botanical corner ornament for the diploma border. */
 function CornerOrnament({ flip }: { flip?: "x" | "y" | "xy" }) {
   const transform =
-    flip === "x" ? "scale(-1,1)" : flip === "y" ? "scale(1,-1)" : flip === "xy" ? "scale(-1,-1)" : undefined;
+    flip === "x"
+      ? "scale(-1,1)"
+      : flip === "y"
+        ? "scale(1,-1)"
+        : flip === "xy"
+          ? "scale(-1,-1)"
+          : undefined;
   return (
-    <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style={{ transform }}>
+    <svg
+      width="56"
+      height="56"
+      viewBox="0 0 56 56"
+      fill="none"
+      style={{ transform }}
+    >
       <g stroke={GOLD} strokeWidth="1.4" strokeLinecap="round" fill="none">
         <path d="M 4,52 C 4,28 12,12 40,6" />
         <path d="M 12,40 C 8,34 8,28 12,22 C 17,27 17,35 12,40 Z" />
@@ -40,32 +51,32 @@ export default async function DiplomaPage({
 
   const studentCert = await prisma.studentCertification.findUnique({
     where: { id },
-    include: { certification: true, user: { select: { id: true, name: true, studentId: true } } },
+    include: {
+      certification: true,
+      user: { select: { id: true, name: true, studentId: true } },
+    },
   });
 
   // Only the owner may view, and only once awarded
-  if (!studentCert || studentCert.userId !== user.id || studentCert.status !== "awarded") {
+  if (
+    !studentCert ||
+    studentCert.userId !== user.id ||
+    studentCert.status !== "awarded"
+  ) {
     notFound();
   }
 
-  // Lazily assign a certificate number the first time the diploma is viewed
-  let certificateNumber = studentCert.certificateNumber;
-  if (!certificateNumber && studentCert.user.studentId) {
-    const existing = await prisma.studentCertification.count({
-      where: { userId: user.id, certificateNumber: { not: null } },
-    });
-    certificateNumber = formatCertificateNumber(studentCert.user.studentId, existing + 1);
-    await prisma.studentCertification.update({
-      where: { id: studentCert.id },
-      data: { certificateNumber },
-    });
-  }
+  const certificateNumber = studentCert.certificateNumber;
+  if (!certificateNumber || !studentCert.awardedAt) notFound();
 
-  const awardedDate = (studentCert.awardedAt ?? new Date()).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const awardedDate = (studentCert.awardedAt ?? new Date()).toLocaleDateString(
+    "en-US",
+    {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    },
+  );
 
   const verifyPath = `/verify/${certificateNumber ?? ""}`;
 
@@ -80,7 +91,9 @@ export default async function DiplomaPage({
           >
             ← Certifications
           </Link>
-          <h1 className="font-playfair text-2xl font-bold text-[#1a1a1a] mt-1">Your Diploma</h1>
+          <h1 className="font-playfair text-2xl font-bold text-[#1a1a1a] mt-1">
+            Your Diploma
+          </h1>
         </div>
         <DocumentActions
           printLabel="Download Diploma"
@@ -107,17 +120,29 @@ export default async function DiplomaPage({
             style={{ border: `1px solid ${GOLD}` }}
           >
             {/* Corner ornaments */}
-            <div className="absolute top-2 left-2"><CornerOrnament /></div>
-            <div className="absolute top-2 right-2"><CornerOrnament flip="x" /></div>
-            <div className="absolute bottom-2 left-2"><CornerOrnament flip="y" /></div>
-            <div className="absolute bottom-2 right-2"><CornerOrnament flip="xy" /></div>
+            <div className="absolute top-2 left-2">
+              <CornerOrnament />
+            </div>
+            <div className="absolute top-2 right-2">
+              <CornerOrnament flip="x" />
+            </div>
+            <div className="absolute bottom-2 left-2">
+              <CornerOrnament flip="y" />
+            </div>
+            <div className="absolute bottom-2 right-2">
+              <CornerOrnament flip="xy" />
+            </div>
 
             {/* Watermark seal behind content */}
             <div
               className="absolute inset-0 flex items-center justify-center pointer-events-none"
               style={{ opacity: 0.06 }}
             >
-              <AcademySeal size="xl" variant="dark" className="w-[420px] h-[420px]" />
+              <AcademySeal
+                size="xl"
+                variant="dark"
+                className="w-[420px] h-[420px]"
+              />
             </div>
 
             {/* Content */}
@@ -137,9 +162,15 @@ export default async function DiplomaPage({
                 Natura Sanat, Sapientia Docet
               </p>
 
-              <div className="w-36 h-px my-7" style={{ backgroundColor: GOLD }} />
+              <div
+                className="w-36 h-px my-7"
+                style={{ backgroundColor: GOLD }}
+              />
 
-              <p className="font-playfair italic text-[15px]" style={{ color: "#7a7266" }}>
+              <p
+                className="font-playfair italic text-[15px]"
+                style={{ color: "#7a7266" }}
+              >
                 This is to certify that
               </p>
 
@@ -150,7 +181,10 @@ export default async function DiplomaPage({
                 {user.name}
               </p>
 
-              <p className="font-playfair italic text-[14px] mt-4" style={{ color: "#7a7266" }}>
+              <p
+                className="font-playfair italic text-[14px] mt-4"
+                style={{ color: "#7a7266" }}
+              >
                 has successfully completed all requirements for the
               </p>
 
@@ -161,7 +195,10 @@ export default async function DiplomaPage({
                 {studentCert.certification.title}
               </p>
 
-              <p className="font-playfair italic text-[14px] mt-4" style={{ color: "#7a7266" }}>
+              <p
+                className="font-playfair italic text-[14px] mt-4"
+                style={{ color: "#7a7266" }}
+              >
                 and is hereby awarded the designation of
               </p>
 
@@ -172,12 +209,18 @@ export default async function DiplomaPage({
                 {studentCert.certification.title}
               </p>
 
-              <div className="w-36 h-px my-7" style={{ backgroundColor: GOLD }} />
+              <div
+                className="w-36 h-px my-7"
+                style={{ backgroundColor: GOLD }}
+              />
 
               <p className="text-[13px]" style={{ color: "#5a5348" }}>
                 {awardedDate}
               </p>
-              <p className="text-[11px] font-mono mt-1.5" style={{ color: "#8a7a6a" }}>
+              <p
+                className="text-[11px] font-mono mt-1.5"
+                style={{ color: "#8a7a6a" }}
+              >
                 Certificate No: {certificateNumber ?? "Pending"}
               </p>
 
@@ -203,7 +246,10 @@ export default async function DiplomaPage({
                 </div>
                 <div className="flex flex-col items-center justify-end">
                   <div className="h-[30px]" />
-                  <div className="w-full h-px mt-1" style={{ backgroundColor: "#8a7a6a" }} />
+                  <div
+                    className="w-full h-px mt-1"
+                    style={{ backgroundColor: "#8a7a6a" }}
+                  />
                   <p
                     className="text-[9px] uppercase tracking-[0.2em] mt-2"
                     style={{ color: "#7a7266" }}

@@ -1,15 +1,6 @@
 import { getLevelTitle, getWUForLevel } from "@/lib/utils";
-
-const transactions = [
-  { id: 1, description: "Lesson completed: The Origins of Herbal Medicine", sourceType: "lesson", amount: 1, date: "Jun 9, 2026" },
-  { id: 2, description: "Quiz passed: Herbal Foundations Quiz (90%)", sourceType: "quiz", amount: 2, date: "Jun 8, 2026" },
-  { id: 3, description: "Assignment submitted: Herb Journal Entry", sourceType: "assignment", amount: 5, date: "Jun 6, 2026" },
-  { id: 4, description: "Lesson completed: How Herbalism Differs from Pharmaceutical Medicine", sourceType: "lesson", amount: 1, date: "Jun 5, 2026" },
-  { id: 5, description: "Discussion post: Your Entry into the Plant World", sourceType: "discussion", amount: 2, date: "Jun 4, 2026" },
-  { id: 6, description: "Case study approved: Supporting Seasonal Allergies", sourceType: "case_study", amount: 15, date: "May 28, 2026" },
-  { id: 7, description: "Lesson completed: Introduction to Herbal Energetics", sourceType: "lesson", amount: 1, date: "May 25, 2026" },
-  { id: 8, description: "Assignment submitted: Yin/Yang Reflection Essay", sourceType: "assignment", amount: 5, date: "May 20, 2026" },
-];
+import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 const sourceColors: Record<string, string> = {
   lesson: "#4a7c59",
@@ -18,6 +9,8 @@ const sourceColors: Record<string, string> = {
   discussion: "#2c6e8a",
   case_study: "#c9923a",
   capstone: "#c0392b",
+  midterm: "#5b4fcf",
+  final: "#8b4a3c",
 };
 
 const earnGuide = [
@@ -29,25 +22,35 @@ const earnGuide = [
   { type: "Capstone",   wu: "50",    label: "WU", color: "#c0392b" },
 ];
 
-const currentWU = 342;
-const currentLevel = 3;
-const levelData = getWUForLevel(currentLevel);
-
-const levelProgressPct = Math.min(
-  100,
-  Math.round(((currentWU - levelData.min) / (levelData.max - levelData.min)) * 100)
-);
-const wuToNext = Math.max(0, levelData.max - currentWU);
-
 // Shared parchment card style
 const CARD_STYLE = { backgroundColor: "#FAF7F0", border: "0.5px solid #DDD5C5" } as const;
 
-export default function WellnessUnitsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function WellnessUnitsPage() {
+  const user = await getCurrentUser();
+  const transactions = user
+    ? await prisma.wellnessUnitTransaction.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      })
+    : [];
+
+  const currentWU = user?.studentProfile?.totalWU ?? 0;
+  const currentLevel = user?.studentProfile?.level ?? 1;
+  const levelData = getWUForLevel(currentLevel);
+  const levelProgressPct = Math.min(
+    100,
+    Math.max(0, Math.round(((currentWU - levelData.min) / (levelData.max - levelData.min)) * 100))
+  );
+  const wuToNext = Math.max(0, levelData.max - currentWU);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-playfair text-3xl font-bold text-[#1a1a1a]">Wellness Units</h1>
-        <p className="text-[#6b6459] mt-1">Your learning currency and progress tracker</p>
+        <p className="text-[#6b6459] mt-1">Your recorded academic recognition and available activity history</p>
       </div>
 
       {/* ── Main stat card — dark green hero, matching Dashboard WU card ─────── */}
@@ -106,11 +109,20 @@ export default function WellnessUnitsPage() {
         </div>
       </div>
 
-      {/* ── Transaction History ──────────────────────────────────────────────── */}
+      {/* ── Recorded activity ────────────────────────────────────────────────── */}
       <div className="rounded-[16px] p-6" style={CARD_STYLE}>
-        <h2 className="font-playfair text-xl font-bold text-[#1a1a1a] mb-4">Transaction History</h2>
-        <div>
-          {transactions.map((tx) => (
+        <h2 className="font-playfair text-xl font-bold text-[#1a1a1a]">Recorded Activity</h2>
+        <p className="mt-1 mb-4 text-[11px] leading-5 text-[#8a7a6a]">
+          This is the activity history currently available to your student record. Your recorded balance may include earlier academic recognition not itemized here.
+        </p>
+        {transactions.length === 0 ? (
+          <div className="rounded-xl border border-[#e5ddd0] bg-white/50 px-5 py-8 text-center">
+            <p className="text-[13px] font-semibold text-[#1a1a1a]">No itemized WU activity is available yet.</p>
+            <p className="mt-1 text-[11px] text-[#8a7a6a]">Verified learning activity will appear here as it is recorded.</p>
+          </div>
+        ) : (
+          <div>
+            {transactions.map((tx) => (
             <div
               key={tx.id}
               className="flex items-center justify-between gap-4 py-3 border-b last:border-0"
@@ -123,7 +135,9 @@ export default function WellnessUnitsPage() {
                 />
                 <div className="min-w-0">
                   <p className="text-[13px] text-[#1a1a1a] line-clamp-1">{tx.description}</p>
-                  <p className="text-[11px] text-[#8a7a6a] mt-0.5">{tx.date}</p>
+                  <p className="text-[11px] text-[#8a7a6a] mt-0.5">
+                    {tx.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </p>
                 </div>
               </div>
               <div className="flex flex-col items-end flex-shrink-0">
@@ -135,8 +149,9 @@ export default function WellnessUnitsPage() {
                 </span>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -4,10 +4,12 @@ import PractitionerDirectory from "@/components/practitioner/PractitionerDirecto
 export const dynamic = "force-dynamic";
 
 export default async function PractitionerNetworkPage() {
-  const practitioners = await prisma.practitionerProfile.findMany({
-    where: { verifiedGraduate: true },
-    orderBy: { displayName: "asc" },
-  });
+  const practitioners = process.env.DATABASE_URL
+    ? await prisma.practitionerProfile.findMany({
+        where: { verifiedGraduate: true, directoryStatus: "active" },
+        orderBy: { displayName: "asc" },
+      })
+    : [];
 
   const directory = practitioners.map((p) => ({
     id: p.id,
@@ -38,7 +40,10 @@ export default async function PractitionerNetworkPage() {
               Real practitioners.
             </span>
           </h1>
-          <p className="text-sm text-white/70 max-w-xl mt-6" style={{ lineHeight: 1.9 }}>
+          <p
+            className="text-sm text-white/70 max-w-xl mt-6"
+            style={{ lineHeight: 1.9 }}
+          >
             Every practitioner in this directory completed an ANW certification
             and was verified by faculty. Filter by specialty, location, or
             virtual availability to find the right fit.
