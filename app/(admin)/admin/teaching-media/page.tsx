@@ -100,8 +100,8 @@ export default async function TeachingMedia({
         </p>
       )}
       <p className="text-xs text-[#76695E]">
-        Use the provider's caption/transcript controls or captioned video
-        exports. Video hosting privacy must match the Academy's intended
+        Use the provider&apos;s caption/transcript controls or captioned video
+        exports. Video hosting privacy must match the Academy&apos;s intended
         audience. External embeds load only when the student chooses to play.
       </p>
     </div>
